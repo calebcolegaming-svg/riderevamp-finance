@@ -959,25 +959,25 @@ async function loadDB(){
       balances
     ] = await Promise.all([
 
-      supabase
+      supabaseClient
         .from('transactions')
         .select('*'),
 
-      supabase
+      supabaseClient
         .from('products')
         .select('*'),
 
-      supabase
+      supabaseClient
         .from('orders')
         .select('*'),
 
-      supabase
+      supabaseClient
         .from('settings')
         .select('*')
         .limit(1)
         .single(),
 
-      supabase
+      supabaseClient
         .from('balances')
         .select('*')
         .limit(1)
@@ -1017,7 +1017,7 @@ async function loadDB(){
 
       DB.products.push(starter);
 
-      await supabase
+      await supabaseClient
         .from('products')
         .insert([starter]);
 
@@ -1037,7 +1037,6 @@ async function loadDB(){
   }
 
 }
-
 /* ============================================================ MIGRATION */
 
 async function migrateLocalStorage(){
