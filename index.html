@@ -1130,14 +1130,14 @@ async function migrateLocalStorage(){
 
 async function saveTransactions(){
 
-  await supabase
+  await supabaseClient
     .from('transactions')
     .delete()
     .neq('id','0');
 
   if(DB.transactions.length){
 
-    await supabase
+    await supabaseClient
       .from('transactions')
       .insert(
         DB.transactions
@@ -1146,7 +1146,6 @@ async function saveTransactions(){
   }
 
 }
-
 async function saveProducts(){
 
   await supabase
