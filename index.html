@@ -1361,12 +1361,81 @@ function updateProductPreview(){
   $('prev-profit').textContent=fmt(profit); $('prev-profit').style.color=profit>=0?'var(--success)':'var(--danger)';
   $('prev-margin').textContent=fmtPct(margin); $('prev-fee').textContent=fmt(feeAmt);
 }
-function saveProduct(){
-  const name=$('pf-name').value.trim(); if(!name){toast('Product name required','error');return;}
-  const data={name,sku:$('pf-sku').value.trim(),category:$('pf-category').value.trim(),price:parseFloat($('pf-price').value)||0,cost:parseFloat($('pf-cost').value)||0,shipping:parseFloat($('pf-shipping').value)||0,packaging:parseFloat($('pf-packaging').value)||0,platformFee:parseFloat($('pf-fee').value)||0};
-  if(editingProductId){ const idx=DB.products.findIndex(p=>p.id===editingProductId); if(idx!==-1) DB.products[idx]={...DB.products[idx],...data}; toast('Product updated','success'); }
-  else { DB.products.push({id:uid(),...data,createdAt:now()}); toast('Product added','success'); }
-  saveDB(); closeProductModal(); renderProducts();
+async function saveProduct(){
+
+  const name = $('pf-name').value.trim();
+
+  if(!name){
+    toast('Product name required','error');
+    return;
+  }
+
+  const data = {
+    name,
+    sku: $('pf-sku').value.trim(),
+    category: $('pf-category').value.trim(),
+    price: parseFloat($('pf-price').value) || 0,
+    cost: parseFloat($('pf-cost').value) || 0,
+    shipping: parseFloat($('pf-shipping').value) || 0,
+    packaging: parseFloat($('pf-packaging').value) || 0,
+    platformFee: parseFloat($('pf-fee').value) || 0
+  };
+
+  try{
+
+    if(editingProductId){
+
+      await supabaseClient
+        .from('products')
+        .update(data)
+        .eq('id', editingProductId);
+
+      const idx =
+        DB.products.findIndex(
+          p => p.id === editingProductId
+        );
+
+      if(idx !== -1){
+        DB.products[idx] = {
+          ...DB.products[idx],
+          ...data
+        };
+      }
+
+      toast('Product updated','success');
+
+    }else{
+
+      const product = {
+        id: crypto.randomUUID(),
+        ...data,
+        createdAt: new Date().toISOString()
+      };
+
+      await supabaseClient
+        .from('products')
+        .insert([product]);
+
+      DB.products.push(product);
+
+      toast('Product added','success');
+
+    }
+
+    closeProductModal();
+    renderProducts();
+
+  }catch(err){
+
+    console.error(err);
+
+    toast(
+      'Failed to save product',
+      'error'
+    );
+
+  }
+
 }
 function deleteProduct(id){
   DB.products=DB.products.filter(p=>p.id!==id);
