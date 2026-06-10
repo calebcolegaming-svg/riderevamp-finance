@@ -975,13 +975,13 @@ async function loadDB(){
         .from('settings')
         .select('*')
         .limit(1)
-        .single(),
+        .maybeSingle(),
 
       supabaseClient
         .from('balances')
         .select('*')
         .limit(1)
-        .single()
+        .maybeSingle()
 
     ]);
 
