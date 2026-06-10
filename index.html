@@ -1437,9 +1437,38 @@ async function saveProduct(){
   }
 
 }
-function deleteProduct(id){
-  DB.products=DB.products.filter(p=>p.id!==id);
-  saveDB(); toast('Product deleted','info'); renderProducts();
+async function deleteProduct(id){
+
+  try{
+
+    await supabaseClient
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    DB.products =
+      DB.products.filter(
+        p => p.id !== id
+      );
+
+    toast(
+      'Product deleted',
+      'info'
+    );
+
+    renderProducts();
+
+  }catch(err){
+
+    console.error(err);
+
+    toast(
+      'Failed to delete product',
+      'error'
+    );
+
+  }
+
 }
 function renderProducts(){
   const prods=DB.products||[];
