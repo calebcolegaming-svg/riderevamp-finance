@@ -1189,7 +1189,7 @@ async function syncShopifyOrders(){
         id: 'shp-'+o.id,
         user_id: currentUser.id,
         shopify_order_id: String(o.id),
-        orderNumber: '#'+(o.order_number||o.name||o.id),
+        shopify_order_number: '#'+(o.order_number||o.name||o.id),
         customer: customerName,
         productId: '',
         productName: (o.line_items&&o.line_items[0])?o.line_items[0].title:'Shopify Order',
@@ -1198,7 +1198,7 @@ async function syncShopifyOrders(){
         status: mapShopifyFinancialStatus(o.financial_status),
         notes: 'Shopify Order '+( o.name||'#'+o.order_number),
         date: (o.created_at||today()).split('T')[0],
-        total: parseFloat(o.total_price||0),
+        orderValue: parseFloat(o.total_price||0),
         createdAt: o.created_at||now()
       };
     });
