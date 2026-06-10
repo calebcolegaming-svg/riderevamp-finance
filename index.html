@@ -1469,26 +1469,150 @@ function openOrderModal(id){
   if(id){ const o=DB.orders.find(x=>x.id===id); if(o){$('of-customer').value=o.customer;$('of-date').value=o.date;sel.value=o.productId||'';$('of-qty').value=o.qty;$('of-shipping').value=o.shippingCharged||0;$('of-status').value=o.status;$('of-notes').value=o.notes||'';} }
   else{$('of-customer').value='';$('of-date').value=today();sel.value='';$('of-qty').value=1;$('of-shipping').value='';$('of-status').value='pending';$('of-notes').value='';}
   $('order-modal').classList.add('open');
-}
-function closeOrderModal(){ $('order-modal').classList.remove('open'); editingOrderId=null; }
-function saveOrder(){
-  const customer=$('of-customer').value.trim(), productId=$('of-product').value;
-  const qty=parseInt($('of-qty').value)||1, shippingCharged=parseFloat($('of-shipping').value)||0;
-  const status=$('of-status').value, date=$('of-date').value||today(), notes=$('of-notes').value.trim();
-  if(!customer){toast('Customer name required','error');return;}
-  const product=DB.products.find(p=>p.id===productId);
-  const orderValue=product?product.price*qty+shippingCharged:shippingCharged;
-  const netProfit=product?calcProfit(product)*qty:0;
-  const data={customer,productId,productName:product?product.name:'Unknown',qty,shippingCharged,orderValue,netProfit,status,date,notes};
-  if(editingOrderId){ const idx=DB.orders.findIndex(o=>o.id===editingOrderId); if(idx!==-1) DB.orders[idx] = {
-  ...DB.orders[idx],
-  ...data
-}; toast('Order updated','success'); }
-  else{ const orderId='RR-'+String(DB.orders.length+1).padStart(4,'0'); DB.orders.push({id:uid(),orderId,...data,createdAt:now()}); toast('Order added','success'); }
-  if(!editingOrderId && ['paid','shipped','delivered'].includes(status)){
-    DB.balances.cash=(DB.balances.cash||0)+orderValue;
+async function saveOrder(){
+
+  const customer =
+    $('of-customer').value.trim();
+
+  const productId =
+    $('of-product').value;
+
+  const qty =
+    parseInt($('of-qty').value) || 1;
+
+  const shippingCharged =
+    parseFloat($('of-shipping').value) || 0;
+
+  const status =
+    $('of-status').value;
+
+  const date =
+    $('of-date').value || today();
+
+  const notes =
+    $('of-notes').value.trim();
+
+  if(!customer){
+    toast(
+      'Customer name required',
+      'error'
+    );
+    return;
   }
-  saveDB(); renderDashboard(); closeOrderModal(); renderOrders(); renderOrderKPIs();
+
+  const product =
+    DB.products.find(
+      p => p.id === productId
+    );
+
+  const orderValue =
+    product
+      ? product.price * qty + shippingCharged
+      : shippingCharged;
+
+  const netProfit =
+    product
+      ? calcProfit(product) * qty
+      : 0;
+
+  const data = {
+    customer,
+    productId,
+    productName:
+      product
+        ? product.name
+        : 'Unknown',
+    qty,
+    shippingCharged,
+    orderValue,
+    netProfit,
+    status,
+    date,
+    notes
+  };
+
+  try{
+
+    if(editingOrderId){
+
+      await supabaseClient
+        .from('orders')
+        .update(data)
+        .eq('id', editingOrderId);
+
+      const idx =
+        DB.orders.findIndex(
+          o => o.id === editingOrderId
+        );
+
+      if(idx !== -1){
+
+        DB.orders[idx] = {
+          ...DB.orders[idx],
+          ...data
+        };
+
+      }
+
+      toast(
+        'Order updated',
+        'success'
+      );
+
+    }else{
+
+      const order = {
+        id: crypto.randomUUID(),
+        orderId:
+          'RR-' +
+          String(
+            DB.orders.length + 1
+          ).padStart(4,'0'),
+        ...data,
+        createdAt:
+          new Date().toISOString()
+      };
+
+      await supabaseClient
+        .from('orders')
+        .insert([order]);
+
+      DB.orders.push(order);
+
+      if(
+        ['paid','shipped','delivered']
+        .includes(status)
+      ){
+
+        DB.balances.cash =
+          (DB.balances.cash || 0)
+          + orderValue;
+
+      }
+
+      toast(
+        'Order added',
+        'success'
+      );
+
+    }
+
+    renderDashboard();
+    closeOrderModal();
+    renderOrders();
+    renderOrderKPIs();
+
+  }catch(err){
+
+    console.error(err);
+
+    toast(
+      'Failed to save order',
+      'error'
+    );
+
+  }
+
 }
 function updateOrderStatus(id,status){
   const o=DB.orders.find(x=>x.id===id);
