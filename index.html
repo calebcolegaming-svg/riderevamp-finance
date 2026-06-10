@@ -1464,11 +1464,41 @@ function renderProducts(){
 function openOrderModal(id){
   editingOrderId=id||null;
   $('order-modal-title').textContent=id?'Edit Order':'New Order';
+
   const sel=$('of-product');
-  sel.innerHTML='<option value="">— Select Product —</option>'+(DB.products||[]).map(p=>`<option value="${p.id}">${p.name} (${fmt(p.price)})</option>`).join('');
-  if(id){ const o=DB.orders.find(x=>x.id===id); if(o){$('of-customer').value=o.customer;$('of-date').value=o.date;sel.value=o.productId||'';$('of-qty').value=o.qty;$('of-shipping').value=o.shippingCharged||0;$('of-status').value=o.status;$('of-notes').value=o.notes||'';} }
-  else{$('of-customer').value='';$('of-date').value=today();sel.value='';$('of-qty').value=1;$('of-shipping').value='';$('of-status').value='pending';$('of-notes').value='';}
+
+  sel.innerHTML =
+    '<option value="">— Select Product —</option>' +
+    (DB.products||[])
+      .map(p=>`<option value="${p.id}">${p.name} (${fmt(p.price)})</option>`)
+      .join('');
+
+  if(id){
+    const o=DB.orders.find(x=>x.id===id);
+
+    if(o){
+      $('of-customer').value=o.customer;
+      $('of-date').value=o.date;
+      sel.value=o.productId||'';
+      $('of-qty').value=o.qty;
+      $('of-shipping').value=o.shippingCharged||0;
+      $('of-status').value=o.status;
+      $('of-notes').value=o.notes||'';
+    }
+  }else{
+    $('of-customer').value='';
+    $('of-date').value=today();
+    sel.value='';
+    $('of-qty').value=1;
+    $('of-shipping').value='';
+    $('of-status').value='pending';
+    $('of-notes').value='';
+  }
+
   $('order-modal').classList.add('open');
+
+} // <-- ADD THIS
+
 async function saveOrder(){
 
   const customer =
