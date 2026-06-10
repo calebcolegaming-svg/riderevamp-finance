@@ -960,25 +960,25 @@ async function loadDB(){
       balances
     ] = await Promise.all([
 
-      supabase
+      supabaseClient
         .from('transactions')
         .select('*'),
 
-      supabase
+      supabaseClient
         .from('products')
         .select('*'),
 
-      supabase
+      supabaseClient
         .from('orders')
         .select('*'),
 
-      supabase
+      supabaseClient
         .from('settings')
         .select('*')
         .limit(1)
         .single(),
 
-      supabase
+      supabaseClient
         .from('balances')
         .select('*')
         .limit(1)
