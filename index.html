@@ -4,520 +4,278 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RideRevamp Finance</title>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+:root {
+  --white:#ffffff; --off-white:#fafaf8; --cream:#f5f3ee; --cream2:#ede9e0;
+  --gold:#c9a84c; --gold-light:#e4c97e; --gold-pale:#f5edd8; --gold-dark:#a07830; --gold-glow:rgba(201,168,76,0.12);
+  --charcoal:#1a1a1a; --ink:#2c2c2c; --muted:#7a7570; --light-muted:#b0aba4;
+  --border:#e8e3da; --border-hi:#d4cec4;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --shadow:0 4px 16px rgba(0,0,0,0.07),0 1px 4px rgba(0,0,0,0.04);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.10),0 4px 12px rgba(0,0,0,0.05);
+  --radius:12px; --radius-lg:18px;
+  --font-serif:'Playfair Display',Georgia,serif; --font-data:'SF Mono','Fira Code',monospace;
+  --success:#2e7d52; --success-bg:#edf7f2; --danger:#c0392b; --danger-bg:#fdf0ee; --warn:#b07d2a; --warn-bg:#fdf6e8;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--off-white);color:var(--ink);font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6;min-height:100vh;}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:var(--cream);}::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:3px;}
 
-  :root {
-    --white:       #ffffff;
-    --off-white:   #fafaf8;
-    --cream:       #f5f3ee;
-    --cream2:      #ede9e0;
-    --gold:        #c9a84c;
-    --gold-light:  #e4c97e;
-    --gold-pale:   #f5edd8;
-    --gold-dark:   #a07830;
-    --gold-glow:   rgba(201,168,76,0.12);
-    --charcoal:    #1a1a1a;
-    --ink:         #2c2c2c;
-    --muted:       #7a7570;
-    --light-muted: #b0aba4;
-    --border:      #e8e3da;
-    --border-hi:   #d4cec4;
-    --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow:      0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
-    --shadow-lg:   0 12px 40px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.05);
-    --radius:      12px;
-    --radius-lg:   18px;
-    --font-serif:  'Playfair Display', Georgia, serif;
-    --font-data:   'SF Mono', 'Fira Code', monospace;
-    --success:     #2e7d52;
-    --success-bg:  #edf7f2;
-    --danger:      #c0392b;
-    --danger-bg:   #fdf0ee;
-    --warn:        #b07d2a;
-    --warn-bg:     #fdf6e8;
-  }
+/* ── AUTH SCREEN ── */
+#auth-screen{
+  display:none;position:fixed;inset:0;background:var(--off-white);z-index:1000;
+  align-items:center;justify-content:center;padding:20px;
+}
+#auth-screen.visible{display:flex;}
+.auth-box{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:40px;width:100%;max-width:420px;box-shadow:var(--shadow-lg);
+}
+.auth-logo{text-align:center;margin-bottom:28px;}
+.auth-wordmark{font-family:var(--font-serif);font-size:26px;color:var(--charcoal);}
+.auth-wordmark span{color:var(--gold);}
+.auth-sub{font-size:11px;color:var(--light-muted);text-transform:uppercase;letter-spacing:2px;margin-top:4px;}
+.auth-tabs{display:flex;background:var(--cream);border-radius:10px;padding:4px;margin-bottom:28px;}
+.auth-tab{
+  flex:1;padding:9px;text-align:center;border-radius:7px;cursor:pointer;
+  font-size:13px;font-weight:500;color:var(--muted);transition:all .18s;
+}
+.auth-tab.active{background:var(--white);color:var(--charcoal);box-shadow:var(--shadow-sm);}
+.auth-form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.auth-form-group label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:500;}
+.auth-input{
+  background:var(--cream);border:1px solid var(--border);border-radius:8px;
+  color:var(--charcoal);padding:11px 14px;font-size:13.5px;font-family:'Inter',sans-serif;
+  outline:none;transition:border-color .15s,box-shadow .15s;width:100%;
+}
+.auth-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow);}
+.auth-btn{
+  width:100%;padding:12px;border-radius:9px;border:none;cursor:pointer;
+  font-size:14px;font-weight:600;font-family:'Inter',sans-serif;
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--white);
+  box-shadow:0 2px 8px rgba(201,168,76,0.35);transition:all .18s;margin-top:6px;
+}
+.auth-btn:hover{box-shadow:0 4px 16px rgba(201,168,76,0.45);transform:translateY(-1px);}
+.auth-btn:disabled{opacity:.6;cursor:default;transform:none;}
+.auth-error{background:var(--danger-bg);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:10px 14px;color:var(--danger);font-size:13px;margin-bottom:14px;display:none;}
+.auth-error.visible{display:block;}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;}
+.auth-divider hr{flex:1;border:none;border-top:1px solid var(--border);}
+.auth-divider span{font-size:11px;color:var(--light-muted);}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── SIDEBAR ── */
+#app{display:flex;min-height:100vh;}
+#sidebar{width:230px;background:var(--charcoal);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .28s cubic-bezier(.4,0,.2,1);}
+.sidebar-logo{padding:28px 22px 22px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.sidebar-logo .wordmark{font-family:var(--font-serif);font-size:18px;color:var(--white);letter-spacing:.3px;line-height:1.2;}
+.sidebar-logo .wordmark span{color:var(--gold-light);}
+.sidebar-logo .sub{font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:2px;margin-top:4px;}
+nav{flex:1;padding:14px 0;overflow-y:auto;}
+.nav-section-label{font-size:9.5px;color:rgba(255,255,255,0.22);text-transform:uppercase;letter-spacing:2px;padding:14px 22px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 22px;color:rgba(255,255,255,0.5);cursor:pointer;font-size:13.5px;font-weight:400;border-left:2px solid transparent;transition:all .18s;letter-spacing:.1px;}
+.nav-item:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.04);}
+.nav-item.active{color:var(--gold-light);border-left-color:var(--gold);background:rgba(201,168,76,0.08);font-weight:500;}
+.nav-icon{font-size:15px;width:18px;text-align:center;opacity:.9;}
+.sidebar-footer{padding:16px 22px;border-top:1px solid rgba(255,255,255,0.07);font-size:11px;color:rgba(255,255,255,0.2);letter-spacing:.5px;}
+.sidebar-user{padding:14px 22px;border-top:1px solid rgba(255,255,255,0.07);}
+.sidebar-user-email{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.logout-btn{width:100%;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:rgba(255,255,255,0.5);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .18s;text-align:left;}
+.logout-btn:hover{background:rgba(192,57,43,.15);border-color:rgba(192,57,43,.3);color:#e88;}
 
-  body {
-    background: var(--off-white);
-    color: var(--ink);
-    font-family: 'Inter', -apple-system, sans-serif;
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
+/* ── MAIN ── */
+#main{flex:1;margin-left:230px;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm);}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.topbar-title{font-family:var(--font-serif);font-size:20px;font-weight:600;color:var(--charcoal);}
+.topbar-date{font-size:12px;color:var(--light-muted);font-weight:400;letter-spacing:.3px;}
+.topbar-badge{background:var(--gold-pale);color:var(--gold-dark);font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;letter-spacing:.8px;text-transform:uppercase;}
 
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: var(--cream); }
-  ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+/* ── PAGES ── */
+.page{display:none;padding:28px;animation:fadeUp .22s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-  /* ── SIDEBAR ── */
-  #app { display: flex; min-height: 100vh; }
+/* ── HAMBURGER ── */
+#hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;}
+#hamburger span{width:20px;height:1.5px;background:var(--ink);border-radius:1px;}
+#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99;}
 
-  #sidebar {
-    width: 230px;
-    background: var(--charcoal);
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0; left: 0;
-    height: 100vh;
-    z-index: 100;
-    transition: transform .28s cubic-bezier(.4,0,.2,1);
-  }
+/* ── KPI ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:16px;margin-bottom:28px;}
+.kpi-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;}
+.kpi-card:hover{box-shadow:var(--shadow);transform:translateY(-1px);}
+.kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--gold-light));opacity:0;transition:opacity .2s;}
+.kpi-card:hover::after{opacity:1;}
+.kpi-card.green{border-top:3px solid var(--success);}
+.kpi-card.red{border-top:3px solid var(--danger);}
+.kpi-card.gold{border-top:3px solid var(--gold);}
+.kpi-label{font-size:10.5px;color:var(--light-muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;font-weight:500;}
+.kpi-value{font-size:26px;font-weight:700;color:var(--charcoal);font-family:var(--font-data);letter-spacing:-1px;}
+.kpi-sub{font-size:11px;color:var(--light-muted);margin-top:4px;}
 
-  .sidebar-logo {
-    padding: 28px 22px 22px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-  }
-  .sidebar-logo .wordmark {
-    font-family: var(--font-serif);
-    font-size: 18px;
-    color: var(--white);
-    letter-spacing: .3px;
-    line-height: 1.2;
-  }
-  .sidebar-logo .wordmark span { color: var(--gold-light); }
-  .sidebar-logo .sub {
-    font-size: 10px;
-    color: rgba(255,255,255,0.3);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-top: 4px;
-  }
+/* ── SECTION HEADINGS ── */
+.section-heading{font-family:var(--font-serif);font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.section-heading small{font-family:'Inter',sans-serif;font-size:11px;color:var(--light-muted);font-weight:400;}
 
-  nav { flex: 1; padding: 14px 0; overflow-y: auto; }
-  .nav-section-label {
-    font-size: 9.5px;
-    color: rgba(255,255,255,0.22);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    padding: 14px 22px 5px;
-  }
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    padding: 10px 22px;
-    color: rgba(255,255,255,0.5);
-    cursor: pointer;
-    font-size: 13.5px;
-    font-weight: 400;
-    border-left: 2px solid transparent;
-    transition: all .18s;
-    letter-spacing: .1px;
-  }
-  .nav-item:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
-  .nav-item.active {
-    color: var(--gold-light);
-    border-left-color: var(--gold);
-    background: rgba(201,168,76,0.08);
-    font-weight: 500;
-  }
-  .nav-icon { font-size: 15px; width: 18px; text-align: center; opacity: .9; }
+/* ── CARDS ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;margin-bottom:22px;box-shadow:var(--shadow-sm);}
+.gold-divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold-light),transparent);border:none;margin:20px 0;opacity:.5;}
 
-  .sidebar-footer {
-    padding: 16px 22px;
-    border-top: 1px solid rgba(255,255,255,0.07);
-    font-size: 11px;
-    color: rgba(255,255,255,0.2);
-    letter-spacing: .5px;
-  }
+/* ── FORMS ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group.full{grid-column:1/-1;}
+label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:500;}
+input,select,textarea{background:var(--cream);border:1px solid var(--border);border-radius:8px;color:var(--charcoal);padding:10px 13px;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow);background:var(--white);}
+select option{background:var(--white);}
+textarea{resize:vertical;min-height:72px;}
 
-  /* ── MAIN ── */
-  #main { flex: 1; margin-left: 230px; display: flex; flex-direction: column; min-height: 100vh; }
+/* ── BUTTONS ── */
+.btn{padding:10px 20px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;transition:all .18s;display:inline-flex;align-items:center;gap:7px;letter-spacing:.2px;}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--white);box-shadow:0 2px 8px rgba(201,168,76,0.35);}
+.btn-primary:hover{box-shadow:0 4px 16px rgba(201,168,76,0.45);transform:translateY(-1px);}
+.btn-secondary{background:var(--white);color:var(--ink);border:1px solid var(--border-hi);}
+.btn-secondary:hover{border-color:var(--gold);color:var(--gold-dark);background:var(--gold-pale);}
+.btn-danger{background:var(--danger-bg);color:var(--danger);border:1px solid rgba(192,57,43,.2);}
+.btn-danger:hover{background:#fde0dc;}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:7px;}
+.btn-icon{padding:6px 9px;border-radius:7px;}
 
-  .topbar {
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    box-shadow: var(--shadow-sm);
-  }
-  .topbar-left { display: flex; align-items: center; gap: 14px; }
-  .topbar-title { font-family: var(--font-serif); font-size: 20px; font-weight: 600; color: var(--charcoal); }
-  .topbar-date {
-    font-size: 12px;
-    color: var(--light-muted);
-    font-weight: 400;
-    letter-spacing: .3px;
-  }
-  .topbar-badge {
-    background: var(--gold-pale);
-    color: var(--gold-dark);
-    font-size: 10px;
-    font-weight: 600;
-    padding: 3px 9px;
-    border-radius: 20px;
-    letter-spacing: .8px;
-    text-transform: uppercase;
-  }
+/* ── TABLES ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:var(--cream);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1.2px;padding:11px 14px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);font-weight:600;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:hover{background:var(--off-white);}
+tbody td{padding:11px 14px;vertical-align:middle;}
+tbody tr:last-child{border-bottom:none;}
+.money{font-family:var(--font-data);font-size:13px;}
+.money.pos{color:var(--success);}
+.money.neg{color:var(--danger);}
 
-  /* ── PAGES ── */
-  .page { display: none; padding: 28px; animation: fadeUp .22s ease; }
-  .page.active { display: block; }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+/* ── BADGES ── */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;}
+.badge-pending{background:var(--warn-bg);color:var(--warn);}
+.badge-paid{background:var(--success-bg);color:var(--success);}
+.badge-shipped{background:#eef2ff;color:#4f63d2;}
+.badge-delivered{background:var(--success-bg);color:var(--success);}
+.badge-refunded{background:var(--danger-bg);color:var(--danger);}
+.badge-revenue{background:var(--success-bg);color:var(--success);}
+.badge-expense{background:var(--danger-bg);color:var(--danger);}
+.badge-inventory{background:var(--gold-pale);color:var(--gold-dark);}
+.badge-refund{background:var(--warn-bg);color:var(--warn);}
+.badge-withdrawal{background:var(--danger-bg);color:var(--danger);}
+.badge-transfer{background:var(--cream2);color:var(--muted);}
 
-  /* ── HAMBURGER ── */
-  #hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 6px; }
-  #hamburger span { width: 20px; height: 1.5px; background: var(--ink); border-radius: 1px; }
-  #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 99; }
+/* ── CHARTS ── */
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-bottom:24px;}
+.chart-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);}
+.chart-title{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:1.2px;}
+.chart-wrap{position:relative;height:220px;}
 
-  /* ── KPI CARDS ── */
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 16px; margin-bottom: 28px; }
+/* ── HEALTH ── */
+.health-ring-wrap{display:flex;align-items:center;justify-content:center;padding:20px;}
+.health-ring{position:relative;width:160px;height:160px;}
+.health-ring svg{transform:rotate(-90deg);}
+.health-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.health-score-num{font-family:var(--font-data);font-size:42px;font-weight:700;color:var(--charcoal);}
+.health-score-lbl{font-size:11px;color:var(--light-muted);text-transform:uppercase;letter-spacing:1px;}
+.rec-list{list-style:none;display:flex;flex-direction:column;gap:10px;}
+.rec-item{display:flex;align-items:flex-start;gap:12px;background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.5;}
+.rec-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
 
-  .kpi-card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow .2s, transform .2s;
-  }
-  .kpi-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
-  .kpi-card::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--gold), var(--gold-light));
-    opacity: 0;
-    transition: opacity .2s;
-  }
-  .kpi-card:hover::after { opacity: 1; }
-  .kpi-card.green { border-top: 3px solid var(--success); }
-  .kpi-card.red   { border-top: 3px solid var(--danger); }
-  .kpi-card.gold  { border-top: 3px solid var(--gold); }
-  .kpi-label { font-size: 10.5px; color: var(--light-muted); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; font-weight: 500; }
-  .kpi-value { font-size: 26px; font-weight: 700; color: var(--charcoal); font-family: var(--font-data); letter-spacing: -1px; }
-  .kpi-sub   { font-size: 11px; color: var(--light-muted); margin-top: 4px; }
+/* ── AI ── */
+.drop-zone{border:2px dashed var(--border-hi);border-radius:var(--radius-lg);padding:44px 20px;text-align:center;cursor:pointer;transition:all .2s;color:var(--light-muted);background:var(--cream);}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--gold);color:var(--gold-dark);background:var(--gold-pale);}
+.drop-zone-icon{font-size:38px;margin-bottom:10px;}
+.ai-result{background:var(--cream);border:1px solid var(--border);border-radius:var(--radius);padding:18px;font-size:13px;line-height:1.85;white-space:pre-wrap;max-height:500px;overflow-y:auto;color:var(--ink);}
+.ai-result h3{color:var(--gold-dark);font-family:var(--font-serif);font-size:15px;margin:12px 0 5px;}
+.thinking-dots{display:inline-flex;gap:5px;}
+.thinking-dots span{width:7px;height:7px;background:var(--gold);border-radius:50%;animation:dot .9s infinite;}
+.thinking-dots span:nth-child(2){animation-delay:.2s;}
+.thinking-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes dot{0%,80%,100%{opacity:.2}40%{opacity:1}}
 
-  /* ── SECTION HEADINGS ── */
-  .section-heading {
-    font-family: var(--font-serif);
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--charcoal);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .section-heading small { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--light-muted); font-weight: 400; }
+/* ── MISC ── */
+.row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:22px;}
+.row .card{flex:1;min-width:260px;margin-bottom:0;}
+.empty-state{text-align:center;padding:44px 20px;color:var(--light-muted);}
+.empty-state .es-icon{font-size:32px;margin-bottom:10px;opacity:.4;}
+.tag{display:inline-block;background:var(--cream);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:11px;color:var(--muted);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+.progress-bar-wrap{background:var(--cream2);border-radius:20px;height:5px;overflow:hidden;margin:5px 0;}
+.progress-bar{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width .5s ease;}
+.progress-bar.warn{background:linear-gradient(90deg,var(--warn),#e6a83a);}
+.progress-bar.danger{background:linear-gradient(90deg,var(--danger),#e05b4b);}
 
-  /* ── CARDS ── */
-  .card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 22px;
-    margin-bottom: 22px;
-    box-shadow: var(--shadow-sm);
-  }
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,26,.5);z-index:200;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;animation:fadeUp .22s ease;box-shadow:var(--shadow-lg);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.modal-title{font-family:var(--font-serif);font-size:18px;font-weight:600;color:var(--charcoal);}
+.modal-close{background:var(--cream);border:1px solid var(--border);color:var(--muted);border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.modal-close:hover{background:var(--cream2);color:var(--charcoal);}
 
-  /* ── DIVIDER ── */
-  .gold-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
-    border: none;
-    margin: 20px 0;
-    opacity: .5;
-  }
+/* ── TOAST ── */
+#toast-container{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:13px 18px;font-size:13px;min-width:240px;animation:slideIn .22s ease;display:flex;align-items:center;gap:9px;box-shadow:var(--shadow);color:var(--charcoal);}
+.toast.success{border-left:3px solid var(--success);}
+.toast.error{border-left:3px solid var(--danger);}
+.toast.info{border-left:3px solid var(--gold);}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
 
-  /* ── FORMS ── */
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-group.full { grid-column: 1 / -1; }
-  label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
-  input, select, textarea {
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--charcoal);
-    padding: 10px 13px;
-    font-size: 13.5px;
-    font-family: 'Inter', sans-serif;
-    outline: none;
-    transition: border-color .15s, box-shadow .15s;
-    width: 100%;
-  }
-  input:focus, select:focus, textarea:focus {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px var(--gold-glow);
-    background: var(--white);
-  }
-  select option { background: var(--white); }
-  textarea { resize: vertical; min-height: 72px; }
+#product-preview{margin-top:16px;background:var(--gold-pale);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:14px 18px;}
+#product-preview .prev-label{font-size:10px;color:var(--gold-dark);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;font-weight:600;}
 
-  /* ── BUTTONS ── */
-  .btn {
-    padding: 10px 20px;
-    border-radius: 9px;
-    border: none;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
-    transition: all .18s;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    letter-spacing: .2px;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-    color: var(--white);
-    box-shadow: 0 2px 8px rgba(201,168,76,0.35);
-  }
-  .btn-primary:hover { box-shadow: 0 4px 16px rgba(201,168,76,0.45); transform: translateY(-1px); }
-  .btn-secondary {
-    background: var(--white);
-    color: var(--ink);
-    border: 1px solid var(--border-hi);
-  }
-  .btn-secondary:hover { border-color: var(--gold); color: var(--gold-dark); background: var(--gold-pale); }
-  .btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(192,57,43,.2); }
-  .btn-danger:hover { background: #fde0dc; }
-  .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 7px; }
-  .btn-icon { padding: 6px 9px; border-radius: 7px; }
-
-  /* ── TABLES ── */
-  .tbl-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead th {
-    background: var(--cream);
-    color: var(--muted);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    padding: 11px 14px;
-    text-align: left;
-    white-space: nowrap;
-    border-bottom: 1px solid var(--border);
-    font-weight: 600;
-  }
-  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
-  tbody tr:hover { background: var(--off-white); }
-  tbody td { padding: 11px 14px; vertical-align: middle; }
-  tbody tr:last-child { border-bottom: none; }
-  .money { font-family: var(--font-data); font-size: 13px; }
-  .money.pos { color: var(--success); }
-  .money.neg { color: var(--danger); }
-
-  /* ── BADGES ── */
-  .badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 10.5px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .6px;
-  }
-  .badge-pending   { background: var(--warn-bg);    color: var(--warn); }
-  .badge-paid      { background: var(--success-bg); color: var(--success); }
-  .badge-shipped   { background: #eef2ff; color: #4f63d2; }
-  .badge-delivered { background: var(--success-bg); color: var(--success); }
-  .badge-refunded  { background: var(--danger-bg);  color: var(--danger); }
-  .badge-revenue   { background: var(--success-bg); color: var(--success); }
-  .badge-expense   { background: var(--danger-bg);  color: var(--danger); }
-  .badge-inventory { background: var(--gold-pale);  color: var(--gold-dark); }
-  .badge-refund    { background: var(--warn-bg);    color: var(--warn); }
-  .badge-withdrawal{ background: var(--danger-bg);  color: var(--danger); }
-  .badge-transfer  { background: var(--cream2);     color: var(--muted); }
-
-  /* ── CHARTS ── */
-  .chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-bottom: 24px; }
-  .chart-card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 22px;
-    box-shadow: var(--shadow-sm);
-  }
-  .chart-title {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--muted);
-    margin-bottom: 16px;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-  }
-  .chart-wrap { position: relative; height: 220px; }
-
-  /* ── HEALTH ── */
-  .health-ring-wrap { display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .health-ring { position: relative; width: 160px; height: 160px; }
-  .health-ring svg { transform: rotate(-90deg); }
-  .health-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .health-score-num { font-family: var(--font-data); font-size: 42px; font-weight: 700; color: var(--charcoal); }
-  .health-score-lbl { font-size: 11px; color: var(--light-muted); text-transform: uppercase; letter-spacing: 1px; }
-  .rec-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .rec-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 13px;
-    line-height: 1.5;
-  }
-  .rec-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-
-  /* ── AI ── */
-  .drop-zone {
-    border: 2px dashed var(--border-hi);
-    border-radius: var(--radius-lg);
-    padding: 44px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all .2s;
-    color: var(--light-muted);
-    background: var(--cream);
-  }
-  .drop-zone:hover, .drop-zone.drag-over {
-    border-color: var(--gold);
-    color: var(--gold-dark);
-    background: var(--gold-pale);
-  }
-  .drop-zone-icon { font-size: 38px; margin-bottom: 10px; }
-  .ai-result {
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-    font-size: 13px;
-    line-height: 1.85;
-    white-space: pre-wrap;
-    max-height: 500px;
-    overflow-y: auto;
-    color: var(--ink);
-  }
-  .ai-result h3 { color: var(--gold-dark); font-family: var(--font-serif); font-size: 15px; margin: 12px 0 5px; }
-  .thinking-dots { display: inline-flex; gap: 5px; }
-  .thinking-dots span { width: 7px; height: 7px; background: var(--gold); border-radius: 50%; animation: dot .9s infinite; }
-  .thinking-dots span:nth-child(2) { animation-delay: .2s; }
-  .thinking-dots span:nth-child(3) { animation-delay: .4s; }
-  @keyframes dot { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
-
-  /* ── MISC ── */
-  .row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
-  .row .card { flex: 1; min-width: 260px; margin-bottom: 0; }
-  .empty-state { text-align: center; padding: 44px 20px; color: var(--light-muted); }
-  .empty-state .es-icon { font-size: 32px; margin-bottom: 10px; opacity: .4; }
-  .tag {
-    display: inline-block;
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 2px 8px;
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
-
-  /* ── PROGRESS BARS ── */
-  .progress-bar-wrap { background: var(--cream2); border-radius: 20px; height: 5px; overflow: hidden; margin: 5px 0; }
-  .progress-bar { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); transition: width .5s ease; }
-  .progress-bar.warn   { background: linear-gradient(90deg, var(--warn), #e6a83a); }
-  .progress-bar.danger { background: linear-gradient(90deg, var(--danger), #e05b4b); }
-
-  /* ── MODAL ── */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(26,26,26,.5); z-index: 200; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 28px;
-    width: 100%;
-    max-width: 560px;
-    max-height: 90vh;
-    overflow-y: auto;
-    animation: fadeUp .22s ease;
-    box-shadow: var(--shadow-lg);
-  }
-  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
-  .modal-title { font-family: var(--font-serif); font-size: 18px; font-weight: 600; color: var(--charcoal); }
-  .modal-close {
-    background: var(--cream);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    border-radius: 7px;
-    width: 30px; height: 30px;
-    cursor: pointer;
-    font-size: 18px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .15s;
-  }
-  .modal-close:hover { background: var(--cream2); color: var(--charcoal); }
-
-  /* ── TOAST ── */
-  #toast-container { position: fixed; bottom: 22px; right: 22px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
-  .toast {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 13px 18px;
-    font-size: 13px;
-    min-width: 240px;
-    animation: slideIn .22s ease;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    box-shadow: var(--shadow);
-    color: var(--charcoal);
-  }
-  .toast.success { border-left: 3px solid var(--success); }
-  .toast.error   { border-left: 3px solid var(--danger); }
-  .toast.info    { border-left: 3px solid var(--gold); }
-  @keyframes slideIn { from{transform:translateX(110%);opacity:0} to{transform:none;opacity:1} }
-
-  /* ── PRODUCT PREVIEW BOX ── */
-  #product-preview {
-    margin-top: 16px;
-    background: var(--gold-pale);
-    border: 1px solid rgba(201,168,76,0.3);
-    border-radius: 10px;
-    padding: 14px 18px;
-  }
-  #product-preview .prev-label { font-size: 10px; color: var(--gold-dark); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; font-weight: 600; }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 768px) {
-    #sidebar { transform: translateX(-100%); }
-    #sidebar.open { transform: translateX(0); }
-    #sidebar-overlay.open { display: block; }
-    #hamburger { display: flex; }
-    #main { margin-left: 0; }
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-    .form-grid { grid-template-columns: 1fr; }
-    .chart-grid { grid-template-columns: 1fr; }
-    .page { padding: 16px; }
-    .topbar { padding: 13px 18px; }
-  }
-  @media (max-width: 420px) { .kpi-grid { grid-template-columns: 1fr; } }
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%);}
+  #sidebar.open{transform:translateX(0);}
+  #sidebar-overlay.open{display:block;}
+  #hamburger{display:flex;}
+  #main{margin-left:0;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .form-grid{grid-template-columns:1fr;}
+  .chart-grid{grid-template-columns:1fr;}
+  .page{padding:16px;}
+  .topbar{padding:13px 18px;}
+}
+@media(max-width:420px){.kpi-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 
-<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="visible">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-wordmark">Ride<span>Revamp</span></div>
+      <div class="auth-sub">Finance Tracker</div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</div>
+      <div class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Create Account</div>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+    <div id="login-form">
+      <div class="auth-form-group"><label>Email</label><input class="auth-input" type="email" id="login-email" placeholder="you@example.com"></div>
+      <div class="auth-form-group"><label>Password</label><input class="auth-input" type="password" id="login-password" placeholder="••••••••"></div>
+      <button class="auth-btn" id="login-btn" onclick="handleLogin()">Sign In</button>
+    </div>
+    <div id="signup-form" style="display:none;">
+      <div class="auth-form-group"><label>Email</label><input class="auth-input" type="email" id="signup-email" placeholder="you@example.com"></div>
+      <div class="auth-form-group"><label>Password</label><input class="auth-input" type="password" id="signup-password" placeholder="Min. 6 characters"></div>
+      <div class="auth-form-group"><label>Confirm Password</label><input class="auth-input" type="password" id="signup-confirm" placeholder="Repeat password"></div>
+      <button class="auth-btn" id="signup-btn" onclick="handleSignup()">Create Account</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container"></div>
 
 <!-- PRODUCT MODAL -->
@@ -527,7 +285,7 @@
       <span class="modal-title" id="product-modal-title">Add Product</span>
       <button class="modal-close" onclick="closeProductModal()">×</button>
     </div>
-    <div class="form-grid" id="product-form-grid">
+    <div class="form-grid">
       <div class="form-group"><label>Product Name</label><input type="text" id="pf-name" placeholder="e.g. Custom Decal"></div>
       <div class="form-group"><label>Selling Price ($)</label><input type="number" id="pf-price" placeholder="9.99" step="0.01"></div>
       <div class="form-group"><label>Cost to Make ($)</label><input type="number" id="pf-cost" placeholder="1.20" step="0.01"></div>
@@ -582,11 +340,11 @@
 </div>
 
 <!-- APP -->
-<div id="app">
+<div id="app" style="display:none;">
   <aside id="sidebar">
     <div class="sidebar-logo">
-  <div class="wordmark" id="biz-name-display">RideRevamp</div>
-  <div class="sub">Finance Tracker</div>
+      <div class="wordmark" id="biz-name-display">Ride<span>Revamp</span></div>
+      <div class="sub">Finance Tracker</div>
     </div>
     <nav>
       <div class="nav-section-label">Overview</div>
@@ -603,7 +361,10 @@
       <div class="nav-item" onclick="showPage('export')"><span class="nav-icon">⇣</span> Export / Import</div>
       <div class="nav-item" onclick="showPage('settings')"><span class="nav-icon">◎</span> Settings</div>
     </nav>
-    <div class="sidebar-footer">RideRevamp © 2025</div>
+    <div class="sidebar-user">
+      <div class="sidebar-user-email" id="sidebar-email"></div>
+      <button class="logout-btn" onclick="handleLogout()">↩ Sign Out</button>
+    </div>
   </aside>
 
   <main id="main">
@@ -624,23 +385,12 @@
       <div class="row">
         <div class="card">
           <div class="section-heading">Recent Transactions <small>Last 5</small></div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Category</th><th>Description</th></tr></thead>
-              <tbody id="recent-txn-body"></tbody>
-            </table>
-          </div>
+          <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Category</th><th>Description</th></tr></thead><tbody id="recent-txn-body"></tbody></table></div>
         </div>
       </div>
       <div class="row">
-        <div class="card" style="flex:1;min-width:280px;">
-          <div class="section-heading">Top Products <small>by profit / sale</small></div>
-          <div id="top-products-list"></div>
-        </div>
-        <div class="card" style="flex:1;min-width:280px;">
-          <div class="section-heading">Order Status</div>
-          <div id="order-status-summary"></div>
-        </div>
+        <div class="card" style="flex:1;min-width:280px;"><div class="section-heading">Top Products <small>by profit / sale</small></div><div id="top-products-list"></div></div>
+        <div class="card" style="flex:1;min-width:280px;"><div class="section-heading">Order Status</div><div id="order-status-summary"></div></div>
       </div>
     </div>
 
@@ -649,23 +399,10 @@
       <div class="card">
         <div class="section-heading">Add Transaction</div>
         <div class="form-grid">
-          <div class="form-group"><label>Type</label>
-            <select id="txn-type">
-              <option value="revenue">Revenue</option><option value="expense">Expense</option>
-              <option value="inventory">Inventory Purchase</option><option value="refund">Refund</option>
-              <option value="withdrawal">Withdrawal</option><option value="transfer">Transfer</option>
-            </select>
-          </div>
+          <div class="form-group"><label>Type</label><select id="txn-type"><option value="revenue">Revenue</option><option value="expense">Expense</option><option value="inventory">Inventory Purchase</option><option value="refund">Refund</option><option value="withdrawal">Withdrawal</option><option value="transfer">Transfer</option></select></div>
           <div class="form-group"><label>Date</label><input type="date" id="txn-date"></div>
           <div class="form-group"><label>Amount ($)</label><input type="number" id="txn-amount" placeholder="0.00" step="0.01"></div>
-          <div class="form-group"><label>Category</label>
-            <input type="text" id="txn-category" placeholder="Shopify, Packaging..." list="cat-list">
-            <datalist id="cat-list">
-              <option value="Shopify Sales"><option value="Etsy Sales"><option value="PayPal">
-              <option value="Packaging"><option value="Shipping"><option value="Supplies">
-              <option value="Advertising"><option value="Platform Fee"><option value="Refund">
-            </datalist>
-          </div>
+          <div class="form-group"><label>Category</label><input type="text" id="txn-category" placeholder="Shopify, Packaging..." list="cat-list"><datalist id="cat-list"><option value="Shopify Sales"><option value="Etsy Sales"><option value="PayPal"><option value="Packaging"><option value="Shipping"><option value="Supplies"><option value="Advertising"><option value="Platform Fee"><option value="Refund"></datalist></div>
           <div class="form-group"><label>Description</label><input type="text" id="txn-desc" placeholder="Brief description"></div>
           <div class="form-group"><label>Notes</label><input type="text" id="txn-notes" placeholder="Optional notes"></div>
         </div>
@@ -675,62 +412,30 @@
         </div>
       </div>
       <div class="card">
-        <div class="section-heading">
-          Transaction History
+        <div class="section-heading">Transaction History
           <div style="display:flex;gap:8px;">
             <input type="text" id="txn-search" placeholder="Search..." style="width:150px;padding:6px 10px;font-size:12px;">
-            <select id="txn-filter-type" style="width:130px;padding:6px 10px;font-size:12px;" onchange="renderTransactions()">
-              <option value="">All Types</option>
-              <option value="revenue">Revenue</option><option value="expense">Expense</option>
-              <option value="inventory">Inventory</option><option value="refund">Refund</option>
-              <option value="withdrawal">Withdrawal</option><option value="transfer">Transfer</option>
-            </select>
+            <select id="txn-filter-type" style="width:130px;padding:6px 10px;font-size:12px;" onchange="renderTransactions()"><option value="">All Types</option><option value="revenue">Revenue</option><option value="expense">Expense</option><option value="inventory">Inventory</option><option value="refund">Refund</option><option value="withdrawal">Withdrawal</option><option value="transfer">Transfer</option></select>
           </div>
         </div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Category</th><th>Description</th><th>Notes</th><th></th></tr></thead>
-            <tbody id="txn-body"></tbody>
-          </table>
-        </div>
+        <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Category</th><th>Description</th><th>Notes</th><th></th></tr></thead><tbody id="txn-body"></tbody></table></div>
       </div>
     </div>
 
     <!-- PRODUCTS -->
     <div class="page" id="page-products">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:18px;">
-        <button class="btn btn-primary" onclick="openProductModal()">+ Add Product</button>
-      </div>
-      <div class="card" style="padding:0;overflow:hidden;">
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr><th>Product</th><th>Category</th><th>Sell Price</th><th>Cost</th><th>Shipping</th><th>Packaging</th><th>Platform Fee</th><th>Profit/Sale</th><th>Margin</th><th></th></tr></thead>
-            <tbody id="products-body"></tbody>
-          </table>
-        </div>
-      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:18px;"><button class="btn btn-primary" onclick="openProductModal()">+ Add Product</button></div>
+      <div class="card" style="padding:0;overflow:hidden;"><div class="tbl-wrap"><table><thead><tr><th>Product</th><th>Category</th><th>Sell Price</th><th>Cost</th><th>Shipping</th><th>Packaging</th><th>Platform Fee</th><th>Profit/Sale</th><th>Margin</th><th></th></tr></thead><tbody id="products-body"></tbody></table></div></div>
     </div>
 
     <!-- ORDERS -->
     <div class="page" id="page-orders">
       <div class="kpi-grid" id="order-kpis"></div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:18px;gap:10px;flex-wrap:wrap;">
-        <select id="order-filter" style="padding:9px 13px;border-radius:8px;background:var(--white);border:1px solid var(--border);color:var(--ink);" onchange="renderOrders()">
-          <option value="">All Statuses</option>
-          <option value="pending">Pending</option><option value="paid">Paid</option>
-          <option value="shipped">Shipped</option><option value="delivered">Delivered</option>
-          <option value="refunded">Refunded</option>
-        </select>
+        <select id="order-filter" style="padding:9px 13px;border-radius:8px;background:var(--white);border:1px solid var(--border);color:var(--ink);" onchange="renderOrders()"><option value="">All Statuses</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="refunded">Refunded</option></select>
         <button class="btn btn-primary" onclick="openOrderModal()">+ New Order</button>
       </div>
-      <div class="card" style="padding:0;overflow:hidden;">
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr><th>Order ID</th><th>Date</th><th>Customer</th><th>Product</th><th>Qty</th><th>Order Value</th><th>Net Profit</th><th>Status</th><th></th></tr></thead>
-            <tbody id="orders-body"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="card" style="padding:0;overflow:hidden;"><div class="tbl-wrap"><table><thead><tr><th>Order ID</th><th>Date</th><th>Customer</th><th>Product</th><th>Qty</th><th>Order Value</th><th>Net Profit</th><th>Status</th><th></th></tr></thead><tbody id="orders-body"></tbody></table></div></div>
     </div>
 
     <!-- ANALYTICS -->
@@ -752,27 +457,10 @@
       <div class="row">
         <div class="card" style="max-width:320px;flex:none;">
           <div class="section-heading">Business Health Score</div>
-          <div class="health-ring-wrap">
-            <div class="health-ring">
-              <svg width="160" height="160" viewBox="0 0 160 160">
-                <circle cx="80" cy="80" r="68" fill="none" stroke="var(--cream2)" stroke-width="12"/>
-                <circle id="health-ring-circle" cx="80" cy="80" r="68" fill="none"
-                  stroke="var(--gold)" stroke-width="12" stroke-linecap="round"
-                  stroke-dasharray="427" stroke-dashoffset="427"
-                  style="transition:stroke-dashoffset .8s ease,stroke .5s"/>
-              </svg>
-              <div class="health-center">
-                <div class="health-score-num" id="health-score-num">--</div>
-                <div class="health-score-lbl">/ 100</div>
-              </div>
-            </div>
-          </div>
+          <div class="health-ring-wrap"><div class="health-ring"><svg width="160" height="160" viewBox="0 0 160 160"><circle cx="80" cy="80" r="68" fill="none" stroke="var(--cream2)" stroke-width="12"/><circle id="health-ring-circle" cx="80" cy="80" r="68" fill="none" stroke="var(--gold)" stroke-width="12" stroke-linecap="round" stroke-dasharray="427" stroke-dashoffset="427" style="transition:stroke-dashoffset .8s ease,stroke .5s"/></svg><div class="health-center"><div class="health-score-num" id="health-score-num">--</div><div class="health-score-lbl">/ 100</div></div></div></div>
           <div id="health-breakdown" style="margin-top:8px;"></div>
         </div>
-        <div class="card" style="flex:1;">
-          <div class="section-heading">Recommendations</div>
-          <ul class="rec-list" id="rec-list"></ul>
-        </div>
+        <div class="card" style="flex:1;"><div class="section-heading">Recommendations</div><ul class="rec-list" id="rec-list"></ul></div>
       </div>
     </div>
 
@@ -781,22 +469,11 @@
       <div class="row">
         <div class="card" style="flex:1;">
           <div class="section-heading">Upload Screenshot for Analysis</div>
-          <div class="drop-zone" id="drop-zone" onclick="document.getElementById('ai-file-input').click()">
-            <div class="drop-zone-icon">📸</div>
-            <div style="font-weight:600;color:var(--ink);margin-bottom:4px;">Drop screenshot or click to upload</div>
-            <div style="font-size:12px;">Shopify, Stripe, PayPal, sales reports</div>
-          </div>
+          <div class="drop-zone" id="drop-zone" onclick="document.getElementById('ai-file-input').click()"><div class="drop-zone-icon">📸</div><div style="font-weight:600;color:var(--ink);margin-bottom:4px;">Drop screenshot or click to upload</div><div style="font-size:12px;">Shopify, Stripe, PayPal, sales reports</div></div>
           <input type="file" id="ai-file-input" accept="image/*" style="display:none" onchange="handleFileUpload(event)">
           <div style="margin-top:12px;" id="ai-preview-wrap"></div>
-          <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;" id="ai-actions">
-            <select id="ai-analysis-type" style="flex:1;padding:10px 13px;border-radius:8px;background:var(--cream);border:1px solid var(--border);color:var(--charcoal);">
-              <option value="general">General Business Analysis</option>
-              <option value="shopify">Shopify Dashboard</option>
-              <option value="stripe">Stripe Payments</option>
-              <option value="paypal">PayPal Transactions</option>
-              <option value="expenses">Expense Report</option>
-              <option value="sales">Sales Report</option>
-            </select>
+          <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+            <select id="ai-analysis-type" style="flex:1;padding:10px 13px;border-radius:8px;background:var(--cream);border:1px solid var(--border);color:var(--charcoal);"><option value="general">General Business Analysis</option><option value="shopify">Shopify Dashboard</option><option value="stripe">Stripe Payments</option><option value="paypal">PayPal Transactions</option><option value="expenses">Expense Report</option><option value="sales">Sales Report</option></select>
             <button class="btn btn-primary" id="ai-analyze-btn" onclick="analyzeImage()" style="display:none">✦ Analyze</button>
           </div>
         </div>
@@ -807,9 +484,7 @@
             <button class="btn btn-secondary btn-sm" onclick="generateSummary('weekly')">This Week</button>
             <button class="btn btn-secondary btn-sm" onclick="generateSummary('monthly')">This Month</button>
           </div>
-          <div id="ai-result-area">
-            <div class="empty-state"><div class="es-icon">✦</div><div>Upload a screenshot or generate a summary to see AI insights here.</div></div>
-          </div>
+          <div id="ai-result-area"><div class="empty-state"><div class="es-icon">✦</div><div>Upload a screenshot or generate a summary to see AI insights here.</div></div></div>
         </div>
       </div>
     </div>
@@ -830,14 +505,10 @@
         <div class="card">
           <div class="section-heading">Import & Reset</div>
           <p style="color:var(--muted);font-size:13px;margin-bottom:18px;">Restore from a backup file (.json).</p>
-          <div class="drop-zone" onclick="document.getElementById('import-file').click()" style="padding:28px 20px;">
-            <div style="font-size:26px;margin-bottom:8px;">📂</div>
-            <div style="font-weight:600;color:var(--ink);">Click to import backup</div>
-            <div style="font-size:12px;margin-top:3px;">.json files only</div>
-          </div>
+          <div class="drop-zone" onclick="document.getElementById('import-file').click()" style="padding:28px 20px;"><div style="font-size:26px;margin-bottom:8px;">📂</div><div style="font-weight:600;color:var(--ink);">Click to import backup</div><div style="font-size:12px;margin-top:3px;">.json files only</div></div>
           <input type="file" id="import-file" accept=".json" style="display:none" onchange="importBackup(event)">
           <hr class="gold-divider">
-          <button class="btn btn-danger" onclick="confirmClearData()" style="width:100%;">Clear All Data</button>
+          <button class="btn btn-danger" onclick="confirmClearData()" style="width:100%;">Clear All My Data</button>
         </div>
       </div>
     </div>
@@ -859,12 +530,7 @@
           <div class="section-heading">Business Info</div>
           <div class="form-grid">
             <div class="form-group"><label>Business Name</label><input type="text" id="s-biz-name" placeholder="RideRevamp"></div>
-            <div class="form-group"><label>Currency</label>
-              <select id="s-currency">
-                <option value="USD">USD ($)</option><option value="GBP">GBP (£)</option>
-                <option value="EUR">EUR (€)</option><option value="CAD">CAD (C$)</option><option value="AUD">AUD (A$)</option>
-              </select>
-            </div>
+            <div class="form-group"><label>Currency</label><select id="s-currency"><option value="USD">USD ($)</option><option value="GBP">GBP (£)</option><option value="EUR">EUR (€)</option><option value="CAD">CAD (C$)</option><option value="AUD">AUD (A$)</option></select></div>
             <div class="form-group full"><label>Monthly Expense Budget ($)</label><input type="number" id="s-budget" placeholder="500"></div>
           </div>
           <button class="btn btn-primary" onclick="saveSettings()" style="margin-top:16px;">Save Settings</button>
@@ -884,334 +550,21 @@
 </div>
 
 <script>
-/* ============================================================ STATE */
-let DB = { transactions:[], products:[], orders:[], settings:{bizName:'RideRevamp',currency:'USD',budget:0}, balances:{cash:0,inventory:0} };
-let editingProductId=null, editingOrderId=null, aiUploadedImage=null;
-let charts={};
-
 /* ============================================================ SUPABASE */
+const SUPABASE_URL = 'https://yarepvybmgbbhvyaljdh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhcmVwdnlibWdiYmh2eWFsamRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNzk5MjMsImV4cCI6MjA5NjY1NTkyM30.76G6oUxx9ex-5i1_shZFRzGLPBYikoijM2-tOGuj_u0';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ============================================================ STATE */
+let currentUser = null;
+let DB = { transactions:[], products:[], orders:[], settings:{bizName:'RideRevamp',currency:'USD',budget:0}, balances:{cash:0,inventory:0} };
+let editingProductId=null, editingOrderId=null, aiUploadedImage=null, charts={};
 
-const SUPABASE_URL =
-'https://yarepvybmgbbhvyaljdh.supabase.co';
-
-const SUPABASE_KEY =
-'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhcmVwdnlibWdiYmh2eWFsamRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNzk5MjMsImV4cCI6MjA5NjY1NTkyM30.76G6oUxx9ex-5i1_shZFRzGLPBYikoijM2-tOGuj_u0';
-
-console.log('window.supabase =', window.supabase);
-
-const supabaseClient =
-window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-/* ============================================================ AUTH */
-
-async function checkAuth(){
-
-  const {
-    data: { session }
-  } = await supabaseClient.auth.getSession();
-
-  if(session){
-    return true;
-  }
-
-  const email =
-    prompt('Admin Email');
-
-  const password =
-    prompt('Password');
-
-  if(!email || !password){
-    alert('Login required');
-    return false;
-  }
-
-  const { error } =
-    await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
-
-  if(error){
-    alert(error.message);
-    return false;
-  }
-
-  return true;
-}
-
-/* ============================================================ LOAD DB */
-
-async function loadDB(){
-
-  const authOk = await checkAuth();
-
-  if(!authOk) return;
-
-  try{
-
-    const [
-      txns,
-      products,
-      orders,
-      settings,
-      balances
-    ] = await Promise.all([
-
-      supabaseClient
-        .from('transactions')
-        .select('*'),
-
-      supabaseClient
-        .from('products')
-        .select('*'),
-
-      supabaseClient
-        .from('orders')
-        .select('*'),
-
-      supabaseClient
-        .from('settings')
-        .select('*')
-        .limit(1)
-        .maybeSingle(),
-
-      supabaseClient
-        .from('balances')
-        .select('*')
-        .limit(1)
-        .maybeSingle()
-
-    ]);
-
-    DB.transactions =
-      txns.data || [];
-
-    DB.products =
-      products.data || [];
-
-    DB.orders =
-      orders.data || [];
-
-    DB.settings =
-      settings.data || DB.settings;
-
-    DB.balances =
-      balances.data || DB.balances;
-
-    if(DB.products.length === 0){
-
-      const starter = {
-        id: crypto.randomUUID(),
-        name: 'Custom Decal',
-        sku: 'DECAL-001',
-        category: 'Decals',
-        price: 9.99,
-        cost: 1.20,
-        shipping: 4,
-        packaging: 0.3,
-        platformFee: 3,
-        createdAt: new Date().toISOString()
-      };
-
-      DB.products.push(starter);
-
-      await supabaseClient
-        .from('products')
-        .insert([starter]);
-
-    }
-
-    migrateLocalStorage();
-
-  }catch(err){
-
-    console.error(err);
-
-    toast(
-      'Database load failed',
-      'error'
-    );
-
-  }
-
-}
-/* ============================================================ MIGRATION */
-
-async function migrateLocalStorage(){
-
-  try{
-
-    const raw =
-      localStorage.getItem(
-        'riderevamp_db'
-      );
-
-    if(!raw) return;
-
-    const local =
-      JSON.parse(raw);
-
-    if(
-      local.transactions?.length
-    ){
-
-      await supabase
-        .from('transactions')
-        .insert(
-          local.transactions
-        );
-
-    }
-
-    if(
-      local.products?.length
-    ){
-
-      await supabase
-        .from('products')
-        .insert(
-          local.products
-        );
-
-    }
-
-    if(
-      local.orders?.length
-    ){
-
-      await supabase
-        .from('orders')
-        .insert(
-          local.orders
-        );
-
-    }
-
-    if(local.settings){
-
-      await supabase
-        .from('settings')
-        .upsert([
-          local.settings
-        ]);
-
-    }
-
-    if(local.balances){
-
-      await supabase
-        .from('balances')
-        .upsert([
-          local.balances
-        ]);
-
-    }
-
-    localStorage.removeItem(
-      'riderevamp_db'
-    );
-
-    toast(
-      'Local data migrated',
-      'success'
-    );
-
-  }catch(err){
-
-    console.error(err);
-
-  }
-
-}
-
-/* ============================================================ SAVE HELPERS */
-
-async function saveTransactions(){
-
-  await supabaseClient
-    .from('transactions')
-    .delete()
-    .neq('id','0');
-
-  if(DB.transactions.length){
-
-    await supabaseClient
-      .from('transactions')
-      .insert(
-        DB.transactions
-      );
-
-  }
-
-}
-async function saveProducts(){
-
-  await supabaseClient
-    .from('products')
-    .delete()
-    .neq('id','0');
-
-  if(DB.products.length){
-
-    await supabaseClient
-      .from('products')
-      .insert(
-        DB.products
-      );
-
-  }
-
-}
-
-async function saveOrders(){
-
-  await supabaseClient
-    .from('orders')
-    .delete()
-    .neq('id','0');
-
-  if(DB.orders.length){
-
-    await supabaseClient
-      .from('orders')
-      .insert(
-        DB.orders
-      );
-
-  }
-
-}
-
-async function saveSettingsDB(){
-
-  await supabaseClient
-    .from('settings')
-    .upsert([
-      DB.settings
-    ]);
-
-}
-
-async function saveBalancesDB(){
-
-  await supabaseClient
-    .from('balances')
-    .upsert([
-      DB.balances
-    ]);
-
-}
-
-async function saveDB(){
-  return true;
-}
 /* ============================================================ HELPERS */
 const $=id=>document.getElementById(id);
 const fmt=n=>{ const sym={USD:'$',GBP:'£',EUR:'€',CAD:'C$',AUD:'A$'}[DB.settings?.currency||'USD']||'$'; return sym+parseFloat(n||0).toFixed(2); };
 const fmtPct=n=>parseFloat(n||0).toFixed(1)+'%';
-const uid=()=>'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+const uid=()=>crypto.randomUUID();
 const today=()=>new Date().toISOString().split('T')[0];
 const now=()=>new Date().toISOString();
 
@@ -1221,6 +574,99 @@ function toast(msg,type='info'){
   el.innerHTML=`<span>${type==='success'?'✓':type==='error'?'✕':'·'}</span> ${msg}`;
   $('toast-container').appendChild(el);
   setTimeout(()=>el.remove(),3500);
+}
+
+/* ============================================================ AUTH */
+function switchTab(tab){
+  $('login-form').style.display = tab==='login'?'block':'none';
+  $('signup-form').style.display = tab==='signup'?'block':'none';
+  $('tab-login').classList.toggle('active', tab==='login');
+  $('tab-signup').classList.toggle('active', tab==='signup');
+  $('auth-error').classList.remove('visible');
+}
+
+function showAuthError(msg){ $('auth-error').textContent=msg; $('auth-error').classList.add('visible'); }
+
+async function handleLogin(){
+  const email=$('login-email').value.trim(), password=$('login-password').value;
+  if(!email||!password){ showAuthError('Please fill in all fields.'); return; }
+  const btn=$('login-btn'); btn.disabled=true; btn.textContent='Signing in...';
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  btn.disabled=false; btn.textContent='Sign In';
+  if(error){ showAuthError(error.message); return; }
+  await bootApp();
+}
+
+async function handleSignup(){
+  const email=$('signup-email').value.trim();
+  const password=$('signup-password').value;
+  const confirm=$('signup-confirm').value;
+  if(!email||!password||!confirm){ showAuthError('Please fill in all fields.'); return; }
+  if(password!==confirm){ showAuthError('Passwords do not match.'); return; }
+  if(password.length<6){ showAuthError('Password must be at least 6 characters.'); return; }
+  const btn=$('signup-btn'); btn.disabled=true; btn.textContent='Creating account...';
+  const {error}=await sb.auth.signUp({email,password});
+  btn.disabled=false; btn.textContent='Create Account';
+  if(error){ showAuthError(error.message); return; }
+  toast('Account created! Signing you in...','success');
+  setTimeout(async()=>{ await bootApp(); }, 800);
+}
+
+async function handleLogout(){
+  await sb.auth.signOut();
+  currentUser=null;
+  DB={ transactions:[], products:[], orders:[], settings:{bizName:'RideRevamp',currency:'USD',budget:0}, balances:{cash:0,inventory:0} };
+  $('app').style.display='none';
+  $('auth-screen').classList.add('visible');
+  switchTab('login');
+}
+
+/* ============================================================ BOOT */
+async function bootApp(){
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user){ $('auth-screen').classList.add('visible'); return; }
+  currentUser=user;
+  $('auth-screen').classList.remove('visible');
+  $('app').style.display='flex';
+  $('sidebar-email').textContent=user.email;
+  $('topbar-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'});
+  if($('txn-date')) $('txn-date').value=today();
+  if($('of-date')) $('of-date').value=today();
+  ['pf-price','pf-cost','pf-shipping','pf-packaging','pf-fee'].forEach(id=>{ const el=$(id); if(el) el.addEventListener('input',updateProductPreview); });
+  const s=$('txn-search'); if(s) s.addEventListener('input',renderTransactions);
+  await loadDB();
+  renderDashboard();
+}
+
+/* ============================================================ LOAD DB */
+async function loadDB(){
+  try{
+    const uid=currentUser.id;
+    const [txns,prods,ords,sett,bals]=await Promise.all([
+      sb.from('transactions').select('*').eq('user_id',uid),
+      sb.from('products').select('*').eq('user_id',uid),
+      sb.from('orders').select('*').eq('user_id',uid),
+      sb.from('settings').select('*').eq('user_id',uid).maybeSingle(),
+      sb.from('balances').select('*').eq('user_id',uid).maybeSingle()
+    ]);
+    DB.transactions=txns.data||[];
+    DB.products=prods.data||[];
+    DB.orders=ords.data||[];
+    if(sett.data){ DB.settings={ bizName:sett.data.bizName||'RideRevamp', currency:sett.data.currency||'USD', budget:sett.data.budget||0, id:sett.data.id }; }
+    if(bals.data){ DB.balances={ cash:bals.data.cash||0, inventory:bals.data.inventory||0, id:bals.data.id }; }
+
+    if(DB.products.length===0){
+      const starter={ id:uid, user_id:currentUser.id, name:'Custom Decal', sku:'DECAL-001', category:'Decals', price:9.99, cost:1.20, shipping:4, packaging:0.3, platformFee:3, createdAt:now() };
+      await sb.from('products').insert([starter]);
+      DB.products=[starter];
+    }
+    updateBizNameDisplay();
+  }catch(err){ console.error(err); toast('Failed to load data','error'); }
+}
+
+function updateBizNameDisplay(){
+  const el=$('biz-name-display');
+  if(el){ const n=DB.settings?.bizName||'RideRevamp'; el.innerHTML=n; }
 }
 
 /* ============================================================ NAV */
@@ -1247,510 +693,174 @@ function closeSidebar(){ $('sidebar').classList.remove('open'); $('sidebar-overl
 function renderDashboard(){
   const txns=DB.transactions||[], orders=DB.orders||[];
   const m=new Date().toISOString().slice(0,7);
-  const totalRev  =txns.filter(t=>t.type==='revenue').reduce((s,t)=>s+t.amount,0);
-  const totalExp  =txns.filter(t=>['expense','inventory','withdrawal'].includes(t.type)).reduce((s,t)=>s+t.amount,0);
-  const totalRef  =txns.filter(t=>t.type==='refund').reduce((s,t)=>s+t.amount,0);
-  const orderRev  =orders.filter(o=>['paid','shipped','delivered'].includes(o.status)).reduce((s,o)=>s+(o.orderValue||0),0);
-  const orderProfit=orders.filter(o=>['paid','shipped','delivered'].includes(o.status)).reduce((s,o)=>s+(o.netProfit||0),0);
+  const totalRev=txns.filter(t=>t.type==='revenue').reduce((s,t)=>s+Number(t.amount),0);
+  const totalExp=txns.filter(t=>['expense','inventory','withdrawal'].includes(t.type)).reduce((s,t)=>s+Number(t.amount),0);
+  const totalRef=txns.filter(t=>t.type==='refund').reduce((s,t)=>s+Number(t.amount),0);
+  const orderRev=orders.filter(o=>['paid','shipped','delivered'].includes(o.status)).reduce((s,o)=>s+Number(o.orderValue||0),0);
+  const orderProfit=orders.filter(o=>['paid','shipped','delivered'].includes(o.status)).reduce((s,o)=>s+Number(o.netProfit||0),0);
   const totalProfit=totalRev+orderProfit-totalExp-totalRef;
-  const margin=((totalRev+orderRev)>0?(totalProfit/(totalRev+orderRev))*100:0);
-  const mRev=txns.filter(t=>t.type==='revenue'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0);
-  const mExp=txns.filter(t=>['expense','inventory','withdrawal'].includes(t.type)&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0);
-  const monthlyOrderProfit=orders.filter(o=>['paid','shipped','delivered'].includes(o.status)&&o.date.startsWith(m)).reduce((s,o)=>s+(o.netProfit||0),0);
-  const mProfit=mRev+monthlyOrderProfit-mExp;
-
+  const allRev=totalRev+orderRev;
+  const margin=allRev>0?(totalProfit/allRev)*100:0;
+  const mRev=txns.filter(t=>t.type==='revenue'&&t.date.startsWith(m)).reduce((s,t)=>s+Number(t.amount),0);
+  const mExp=txns.filter(t=>['expense','inventory','withdrawal'].includes(t.type)&&t.date.startsWith(m)).reduce((s,t)=>s+Number(t.amount),0);
+  const mOP=orders.filter(o=>['paid','shipped','delivered'].includes(o.status)&&o.date.startsWith(m)).reduce((s,o)=>s+Number(o.netProfit||0),0);
+  const mProfit=mRev+mOP-mExp;
   $('kpi-grid').innerHTML=[
-    {label:'Total Revenue',    value:fmt(totalRev+orderRev), cls:'green', sub:'All time'},
-    {label:'Total Expenses',   value:fmt(totalExp),           cls:'red',   sub:'All time'},
-    {label:'Total Profit',     value:fmt(totalProfit),        cls:totalProfit>=0?'green':'red', sub:'Revenue − Expenses'},
-    {label:'Profit Margin',    value:fmtPct(margin),          cls:'gold',  sub:'All time'},
-    {label:'Monthly Revenue',  value:fmt(mRev),               cls:'',      sub:m},
-    {label:'Monthly Profit',   value:fmt(mProfit),            cls:mProfit>=0?'green':'red', sub:m},
-    {label:'Available Cash',   value:fmt(DB.balances?.cash||0),      cls:'gold', sub:'Manual balance'},
-    {label:'Inventory Value',  value:fmt(DB.balances?.inventory||0), cls:'',     sub:'Manual balance'},
+    {label:'Total Revenue',value:fmt(allRev),cls:'green',sub:'All time'},
+    {label:'Total Expenses',value:fmt(totalExp),cls:'red',sub:'All time'},
+    {label:'Total Profit',value:fmt(totalProfit),cls:totalProfit>=0?'green':'red',sub:'Revenue − Expenses'},
+    {label:'Profit Margin',value:fmtPct(margin),cls:'gold',sub:'All time'},
+    {label:'Monthly Revenue',value:fmt(mRev),cls:'',sub:m},
+    {label:'Monthly Profit',value:fmt(mProfit),cls:mProfit>=0?'green':'red',sub:m},
+    {label:'Available Cash',value:fmt(DB.balances?.cash||0),cls:'gold',sub:'Manual balance'},
+    {label:'Inventory Value',value:fmt(DB.balances?.inventory||0),cls:'',sub:'Manual balance'},
   ].map(k=>`<div class="kpi-card ${k.cls}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.value}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
-
   const recent=[...txns].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
-  $('recent-txn-body').innerHTML=recent.length?recent.map(t=>`<tr>
-    <td style="color:var(--muted);font-size:12px;">${t.date}</td>
-    <td><span class="badge badge-${t.type}">${t.type}</span></td>
-    <td class="money ${t.type==='revenue'?'pos':['expense','withdrawal','inventory'].includes(t.type)?'neg':''}">${fmt(t.amount)}</td>
-    <td><span class="tag">${t.category||'—'}</span></td>
-    <td style="color:var(--muted);font-size:12px;">${t.description||'—'}</td>
-  </tr>`).join(''):`<tr><td colspan="5" class="empty-state"><div class="es-icon">↕</div>No transactions yet</td></tr>`;
-
+  $('recent-txn-body').innerHTML=recent.length?recent.map(t=>`<tr><td style="color:var(--muted);font-size:12px;">${t.date}</td><td><span class="badge badge-${t.type}">${t.type}</span></td><td class="money ${t.type==='revenue'?'pos':['expense','withdrawal','inventory'].includes(t.type)?'neg':''}">${fmt(t.amount)}</td><td><span class="tag">${t.category||'—'}</span></td><td style="color:var(--muted);font-size:12px;">${t.description||'—'}</td></tr>`).join(''):`<tr><td colspan="5" class="empty-state"><div class="es-icon">↕</div>No transactions yet</td></tr>`;
   const prods=(DB.products||[]).map(p=>({...p,pps:calcProfit(p)})).sort((a,b)=>b.pps-a.pps).slice(0,5);
-  $('top-products-list').innerHTML=prods.length?prods.map(p=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--charcoal);">${p.name}</div>
-        <div style="font-size:11px;color:var(--light-muted);">${p.category||''} · ${fmt(p.price)}</div>
-      </div>
-      <div style="text-align:right;">
-        <div class="money pos" style="font-size:15px;font-weight:700;">${fmt(p.pps)}</div>
-        <div style="font-size:11px;color:var(--light-muted);">${fmtPct(p.price>0?(p.pps/p.price)*100:0)} margin</div>
-      </div>
-    </div>`).join(''):`<div class="empty-state"><div class="es-icon">◻</div>No products added</div>`;
-
+  $('top-products-list').innerHTML=prods.length?prods.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);"><div><div style="font-size:13px;font-weight:600;">${p.name}</div><div style="font-size:11px;color:var(--light-muted);">${p.category||''} · ${fmt(p.price)}</div></div><div style="text-align:right;"><div class="money pos" style="font-size:15px;font-weight:700;">${fmt(p.pps)}</div><div style="font-size:11px;color:var(--light-muted);">${fmtPct(p.price>0?(p.pps/p.price)*100:0)} margin</div></div></div>`).join(''):`<div class="empty-state"><div class="es-icon">◻</div>No products added</div>`;
   const sc={};(DB.orders||[]).forEach(o=>{sc[o.status]=(sc[o.status]||0)+1;});
-  $('order-status-summary').innerHTML=Object.keys(sc).length?Object.entries(sc).map(([s,c])=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-      <span class="badge badge-${s}">${s}</span>
-      <span style="font-family:var(--font-data);font-weight:700;color:var(--charcoal);">${c} order${c!==1?'s':''}</span>
-    </div>`).join(''):`<div class="empty-state"><div class="es-icon">◌</div>No orders yet</div>`;
+  $('order-status-summary').innerHTML=Object.keys(sc).length?Object.entries(sc).map(([s,c])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);"><span class="badge badge-${s}">${s}</span><span style="font-family:var(--font-data);font-weight:700;">${c} order${c!==1?'s':''}</span></div>`).join(''):`<div class="empty-state"><div class="es-icon">◌</div>No orders yet</div>`;
 }
 
 /* ============================================================ TRANSACTIONS */
-function addTransaction(){
+async function addTransaction(){
   const type=$('txn-type').value, date=$('txn-date').value||today(), amount=parseFloat($('txn-amount').value);
   const cat=$('txn-category').value.trim(), desc=$('txn-desc').value.trim(), notes=$('txn-notes').value.trim();
   if(!amount||amount<=0){toast('Enter a valid amount','error');return;}
-  DB.transactions.push({id:uid(),type,date,amount,category:cat,description:desc,notes,createdAt:now()});
-  saveDB(); renderDashboard(); toast('Transaction added','success'); clearTxnForm(); renderTransactions();
+  const txn={id:uid(),user_id:currentUser.id,type,date,amount,category:cat,description:desc,notes,createdAt:now()};
+  const {error}=await sb.from('transactions').insert([txn]);
+  if(error){toast('Failed to save: '+error.message,'error');return;}
+  DB.transactions.push(txn);
+  toast('Transaction added','success'); clearTxnForm(); renderDashboard(); renderTransactions();
 }
-function clearTxnForm(){
-  ['txn-type','txn-date','txn-amount','txn-category','txn-desc','txn-notes'].forEach(id=>{
-    const el=$(id); if(el) el.value=id==='txn-type'?'revenue':id==='txn-date'?today():'';
-  });
-}
-function deleteTransaction(id){
+function clearTxnForm(){ ['txn-type','txn-date','txn-amount','txn-category','txn-desc','txn-notes'].forEach(id=>{ const el=$(id); if(el) el.value=id==='txn-type'?'revenue':id==='txn-date'?today():''; }); }
+async function deleteTransaction(id){
+  const {error}=await sb.from('transactions').delete().eq('id',id).eq('user_id',currentUser.id);
+  if(error){toast('Failed to delete','error');return;}
   DB.transactions=DB.transactions.filter(t=>t.id!==id);
-  saveDB(); renderDashboard(); toast('Transaction deleted','info'); renderTransactions();
+  toast('Deleted','info'); renderDashboard(); renderTransactions();
 }
 function renderTransactions(){
   const search=($('txn-search')?.value||'').toLowerCase(), filter=$('txn-filter-type')?.value||'';
- let txns=[...(DB.transactions||[])].sort((a,b)=>b.date.localeCompare(a.date));
+  let txns=[...(DB.transactions||[])].sort((a,b)=>b.date.localeCompare(a.date));
   if(filter) txns=txns.filter(t=>t.type===filter);
   if(search) txns=txns.filter(t=>[t.type,t.category,t.description,t.notes].join(' ').toLowerCase().includes(search));
-  $('txn-body').innerHTML=txns.length?txns.map(t=>`<tr>
-    <td style="white-space:nowrap;color:var(--muted);font-size:12px;">${t.date}</td>
-    <td><span class="badge badge-${t.type}">${t.type}</span></td>
-    <td class="money ${t.type==='revenue'?'pos':['expense','withdrawal','inventory'].includes(t.type)?'neg':''}">${fmt(t.amount)}</td>
-    <td><span class="tag">${t.category||'—'}</span></td>
-    <td style="font-size:12px;">${t.description||'—'}</td>
-    <td style="font-size:12px;color:var(--muted);">${t.notes||'—'}</td>
-    <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteTransaction('${t.id}')">✕</button></td>
-  </tr>`).join(''):`<tr><td colspan="7" class="empty-state"><div class="es-icon">↕</div>No transactions found</td></tr>`;
+  $('txn-body').innerHTML=txns.length?txns.map(t=>`<tr><td style="white-space:nowrap;color:var(--muted);font-size:12px;">${t.date}</td><td><span class="badge badge-${t.type}">${t.type}</span></td><td class="money ${t.type==='revenue'?'pos':['expense','withdrawal','inventory'].includes(t.type)?'neg':''}">${fmt(t.amount)}</td><td><span class="tag">${t.category||'—'}</span></td><td style="font-size:12px;">${t.description||'—'}</td><td style="font-size:12px;color:var(--muted);">${t.notes||'—'}</td><td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteTransaction('${t.id}')">✕</button></td></tr>`).join(''):`<tr><td colspan="7" class="empty-state"><div class="es-icon">↕</div>No transactions found</td></tr>`;
 }
 
 /* ============================================================ PRODUCTS */
-function calcProfit(p){ return p.price-p.cost-p.shipping-p.packaging-(p.price*(p.platformFee/100)); }
-function calcMargin(p){ return p.price>0?(calcProfit(p)/p.price)*100:0; }
-
+function calcProfit(p){ return Number(p.price)-Number(p.cost)-Number(p.shipping)-Number(p.packaging)-(Number(p.price)*(Number(p.platformFee)/100)); }
+function calcMargin(p){ return Number(p.price)>0?(calcProfit(p)/Number(p.price))*100:0; }
 function openProductModal(id){
   editingProductId=id||null;
   $('product-modal-title').textContent=id?'Edit Product':'Add Product';
-  if(id){ const p=DB.products.find(x=>x.id===id); if(p){ $('pf-name').value=p.name;$('pf-price').value=p.price;$('pf-cost').value=p.cost;$('pf-shipping').value=p.shipping;$('pf-packaging').value=p.packaging;$('pf-fee').value=p.platformFee;$('pf-sku').value=p.sku||'';$('pf-category').value=p.category||''; } }
-  else { ['pf-name','pf-price','pf-cost','pf-shipping','pf-packaging','pf-fee','pf-sku','pf-category'].forEach(id=>$(id).value=''); }
+  if(id){ const p=DB.products.find(x=>x.id===id); if(p){$('pf-name').value=p.name;$('pf-price').value=p.price;$('pf-cost').value=p.cost;$('pf-shipping').value=p.shipping;$('pf-packaging').value=p.packaging;$('pf-fee').value=p.platformFee;$('pf-sku').value=p.sku||'';$('pf-category').value=p.category||'';} }
+  else{ ['pf-name','pf-price','pf-cost','pf-shipping','pf-packaging','pf-fee','pf-sku','pf-category'].forEach(id=>$(id).value=''); }
   updateProductPreview();
   $('product-modal').classList.add('open');
 }
 function closeProductModal(){ $('product-modal').classList.remove('open'); editingProductId=null; }
 function updateProductPreview(){
   const p={price:parseFloat($('pf-price').value)||0,cost:parseFloat($('pf-cost').value)||0,shipping:parseFloat($('pf-shipping').value)||0,packaging:parseFloat($('pf-packaging').value)||0,platformFee:parseFloat($('pf-fee').value)||0};
-  const profit=calcProfit(p), margin=p.price>0?(profit/p.price)*100:0, feeAmt=p.price*(p.platformFee/100);
-  $('prev-profit').textContent=fmt(profit); $('prev-profit').style.color=profit>=0?'var(--success)':'var(--danger)';
-  $('prev-margin').textContent=fmtPct(margin); $('prev-fee').textContent=fmt(feeAmt);
+  const profit=calcProfit(p),margin=p.price>0?(profit/p.price)*100:0,feeAmt=p.price*(p.platformFee/100);
+  $('prev-profit').textContent=fmt(profit);$('prev-profit').style.color=profit>=0?'var(--success)':'var(--danger)';
+  $('prev-margin').textContent=fmtPct(margin);$('prev-fee').textContent=fmt(feeAmt);
 }
 async function saveProduct(){
-
-  const name = $('pf-name').value.trim();
-
-  if(!name){
-    toast('Product name required','error');
-    return;
+  const name=$('pf-name').value.trim(); if(!name){toast('Product name required','error');return;}
+  const data={name,sku:$('pf-sku').value.trim(),category:$('pf-category').value.trim(),price:parseFloat($('pf-price').value)||0,cost:parseFloat($('pf-cost').value)||0,shipping:parseFloat($('pf-shipping').value)||0,packaging:parseFloat($('pf-packaging').value)||0,platformFee:parseFloat($('pf-fee').value)||0};
+  if(editingProductId){
+    const {error}=await sb.from('products').update(data).eq('id',editingProductId).eq('user_id',currentUser.id);
+    if(error){toast('Failed to update','error');return;}
+    const idx=DB.products.findIndex(p=>p.id===editingProductId);
+    if(idx!==-1) DB.products[idx]={...DB.products[idx],...data};
+    toast('Product updated','success');
+  }else{
+    const product={id:uid(),user_id:currentUser.id,...data,createdAt:now()};
+    const {error}=await sb.from('products').insert([product]);
+    if(error){toast('Failed to save','error');return;}
+    DB.products.push(product);
+    toast('Product added','success');
   }
-
-  const data = {
-    name,
-    sku: $('pf-sku').value.trim(),
-    category: $('pf-category').value.trim(),
-    price: parseFloat($('pf-price').value) || 0,
-    cost: parseFloat($('pf-cost').value) || 0,
-    shipping: parseFloat($('pf-shipping').value) || 0,
-    packaging: parseFloat($('pf-packaging').value) || 0,
-    platformFee: parseFloat($('pf-fee').value) || 0
-  };
-
-  try{
-
-    if(editingProductId){
-
-      await supabaseClient
-        .from('products')
-        .update(data)
-        .eq('id', editingProductId);
-
-      const idx =
-        DB.products.findIndex(
-          p => p.id === editingProductId
-        );
-
-      if(idx !== -1){
-        DB.products[idx] = {
-          ...DB.products[idx],
-          ...data
-        };
-      }
-
-      toast('Product updated','success');
-
-    }else{
-
-      const product = {
-        id: crypto.randomUUID(),
-        ...data,
-        createdAt: new Date().toISOString()
-      };
-
-      await supabaseClient
-        .from('products')
-        .insert([product]);
-
-      DB.products.push(product);
-
-      toast('Product added','success');
-
-    }
-
-    closeProductModal();
-    renderProducts();
-
-  }catch(err){
-
-    console.error(err);
-
-    toast(
-      'Failed to save product',
-      'error'
-    );
-
-  }
-
+  closeProductModal(); renderProducts();
 }
 async function deleteProduct(id){
-
-  try{
-
-    await supabaseClient
-      .from('products')
-      .delete()
-      .eq('id', id);
-
-    DB.products =
-      DB.products.filter(
-        p => p.id !== id
-      );
-
-    toast(
-      'Product deleted',
-      'info'
-    );
-
-    renderProducts();
-
-  }catch(err){
-
-    console.error(err);
-
-    toast(
-      'Failed to delete product',
-      'error'
-    );
-
-  }
-
+  const {error}=await sb.from('products').delete().eq('id',id).eq('user_id',currentUser.id);
+  if(error){toast('Failed to delete','error');return;}
+  DB.products=DB.products.filter(p=>p.id!==id);
+  toast('Product deleted','info'); renderProducts();
 }
 function renderProducts(){
   const prods=DB.products||[];
-  $('products-body').innerHTML=prods.length?prods.map(p=>{
-    const profit=calcProfit(p), margin=calcMargin(p), feeAmt=p.price*(p.platformFee/100);
-    return `<tr>
-      <td><strong style="color:var(--charcoal);">${p.name}</strong>${p.sku?`<br><span class="tag">${p.sku}</span>`:''}</td>
-      <td style="color:var(--muted);">${p.category||'—'}</td>
-      <td class="money">${fmt(p.price)}</td><td class="money">${fmt(p.cost)}</td>
-      <td class="money">${fmt(p.shipping)}</td><td class="money">${fmt(p.packaging)}</td>
-      <td class="money" style="color:var(--muted);">${fmt(feeAmt)} <span style="font-size:10px;">(${p.platformFee}%)</span></td>
-      <td class="money ${profit>=0?'pos':'neg'}">${fmt(profit)}</td>
-      <td style="font-weight:700;color:${margin>=20?'var(--success)':margin>=10?'var(--warn)':'var(--danger)'};">${fmtPct(margin)}</td>
-      <td style="white-space:nowrap;">
-        <button class="btn btn-secondary btn-sm btn-icon" onclick="openProductModal('${p.id}')">✎</button>
-        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteProduct('${p.id}')">✕</button>
-      </td></tr>`;
-  }).join(''):`<tr><td colspan="10" class="empty-state"><div class="es-icon">◻</div>No products yet</td></tr>`;
+  $('products-body').innerHTML=prods.length?prods.map(p=>{ const profit=calcProfit(p),margin=calcMargin(p),feeAmt=Number(p.price)*(Number(p.platformFee)/100); return `<tr><td><strong>${p.name}</strong>${p.sku?`<br><span class="tag">${p.sku}</span>`:''}</td><td style="color:var(--muted);">${p.category||'—'}</td><td class="money">${fmt(p.price)}</td><td class="money">${fmt(p.cost)}</td><td class="money">${fmt(p.shipping)}</td><td class="money">${fmt(p.packaging)}</td><td class="money" style="color:var(--muted);">${fmt(feeAmt)} <span style="font-size:10px;">(${p.platformFee}%)</span></td><td class="money ${profit>=0?'pos':'neg'}">${fmt(profit)}</td><td style="font-weight:700;color:${margin>=20?'var(--success)':margin>=10?'var(--warn)':'var(--danger)'};">${fmtPct(margin)}</td><td style="white-space:nowrap;"><button class="btn btn-secondary btn-sm btn-icon" onclick="openProductModal('${p.id}')">✎</button> <button class="btn btn-danger btn-sm btn-icon" onclick="deleteProduct('${p.id}')">✕</button></td></tr>`; }).join(''):`<tr><td colspan="10" class="empty-state"><div class="es-icon">◻</div>No products yet</td></tr>`;
 }
 
 /* ============================================================ ORDERS */
 function openOrderModal(id){
   editingOrderId=id||null;
   $('order-modal-title').textContent=id?'Edit Order':'New Order';
-
   const sel=$('of-product');
-
-  sel.innerHTML =
-    '<option value="">— Select Product —</option>' +
-    (DB.products||[])
-      .map(p=>`<option value="${p.id}">${p.name} (${fmt(p.price)})</option>`)
-      .join('');
-
-  if(id){
-    const o=DB.orders.find(x=>x.id===id);
-
-    if(o){
-      $('of-customer').value=o.customer;
-      $('of-date').value=o.date;
-      sel.value=o.productId||'';
-      $('of-qty').value=o.qty;
-      $('of-shipping').value=o.shippingCharged||0;
-      $('of-status').value=o.status;
-      $('of-notes').value=o.notes||'';
-    }
-  }else{
-    $('of-customer').value='';
-    $('of-date').value=today();
-    sel.value='';
-    $('of-qty').value=1;
-    $('of-shipping').value='';
-    $('of-status').value='pending';
-    $('of-notes').value='';
-  }
-
+  sel.innerHTML='<option value="">— Select Product —</option>'+(DB.products||[]).map(p=>`<option value="${p.id}">${p.name} (${fmt(p.price)})</option>`).join('');
+  if(id){ const o=DB.orders.find(x=>x.id===id); if(o){$('of-customer').value=o.customer;$('of-date').value=o.date;sel.value=o.productId||'';$('of-qty').value=o.qty;$('of-shipping').value=o.shippingCharged||0;$('of-status').value=o.status;$('of-notes').value=o.notes||'';} }
+  else{$('of-customer').value='';$('of-date').value=today();sel.value='';$('of-qty').value=1;$('of-shipping').value='';$('of-status').value='pending';$('of-notes').value='';}
   $('order-modal').classList.add('open');
-
-} // <-- ADD THIS
-function closeOrderModal(){
-  $('order-modal').classList.remove('open');
-  editingOrderId = null;
 }
+function closeOrderModal(){ $('order-modal').classList.remove('open'); editingOrderId=null; }
 async function saveOrder(){
-
-  const customer =
-    $('of-customer').value.trim();
-
-  const productId =
-    $('of-product').value;
-
-  const qty =
-    parseInt($('of-qty').value) || 1;
-
-  const shippingCharged =
-    parseFloat($('of-shipping').value) || 0;
-
-  const status =
-    $('of-status').value;
-
-  const date =
-    $('of-date').value || today();
-
-  const notes =
-    $('of-notes').value.trim();
-
-  if(!customer){
-    toast(
-      'Customer name required',
-      'error'
-    );
-    return;
+  const customer=$('of-customer').value.trim(), productId=$('of-product').value;
+  const qty=parseInt($('of-qty').value)||1, shippingCharged=parseFloat($('of-shipping').value)||0;
+  const status=$('of-status').value, date=$('of-date').value||today(), notes=$('of-notes').value.trim();
+  if(!customer){toast('Customer name required','error');return;}
+  const product=DB.products.find(p=>p.id===productId);
+  const orderValue=product?Number(product.price)*qty+shippingCharged:shippingCharged;
+  const netProfit=product?calcProfit(product)*qty:0;
+  const data={customer,productId,productName:product?product.name:'Unknown',qty,shippingCharged,orderValue,netProfit,status,date,notes};
+  if(editingOrderId){
+    const {error}=await sb.from('orders').update(data).eq('id',editingOrderId).eq('user_id',currentUser.id);
+    if(error){toast('Failed to update','error');return;}
+    const idx=DB.orders.findIndex(o=>o.id===editingOrderId);
+    if(idx!==-1) DB.orders[idx]={...DB.orders[idx],...data};
+    toast('Order updated','success');
+  }else{
+    const order={id:uid(),user_id:currentUser.id,orderId:'RR-'+String(DB.orders.length+1).padStart(4,'0'),...data,createdAt:now()};
+    const {error}=await sb.from('orders').insert([order]);
+    if(error){toast('Failed to save order: '+error.message,'error');return;}
+    DB.orders.push(order);
+    toast('Order added','success');
   }
-
-  const product =
-    DB.products.find(
-      p => p.id === productId
-    );
-
-  const orderValue =
-    product
-      ? product.price * qty + shippingCharged
-      : shippingCharged;
-
-  const netProfit =
-    product
-      ? calcProfit(product) * qty
-      : 0;
-
-  const data = {
-    customer,
-    productId,
-    productName:
-      product
-        ? product.name
-        : 'Unknown',
-    qty,
-    shippingCharged,
-    orderValue,
-    netProfit,
-    status,
-    date,
-    notes
-  };
-
-  try{
-
-    if(editingOrderId){
-
-      await supabaseClient
-        .from('orders')
-        .update(data)
-        .eq('id', editingOrderId);
-
-      const idx =
-        DB.orders.findIndex(
-          o => o.id === editingOrderId
-        );
-
-      if(idx !== -1){
-
-        DB.orders[idx] = {
-          ...DB.orders[idx],
-          ...data
-        };
-
-      }
-
-      toast(
-        'Order updated',
-        'success'
-      );
-
-    }else{
-
-      const order = {
-        id: crypto.randomUUID(),
-        orderId:
-          'RR-' +
-          String(
-            DB.orders.length + 1
-          ).padStart(4,'0'),
-        ...data,
-        createdAt:
-          new Date().toISOString()
-      };
-
-      await supabaseClient
-        .from('orders')
-        .insert([order]);
-
-      DB.orders.push(order);
-
-      if(
-        ['paid','shipped','delivered']
-        .includes(status)
-      ){
-
-        DB.balances.cash =
-          (DB.balances.cash || 0)
-          + orderValue;
-
-      }
-
-      toast(
-        'Order added',
-        'success'
-      );
-
-    }
-
-    renderDashboard();
-    closeOrderModal();
-    renderOrders();
-    renderOrderKPIs();
-
-  }catch(err){
-
-    console.error(err);
-
-    toast(
-      'Failed to save order',
-      'error'
-    );
-
-  }
-
+  closeOrderModal(); renderDashboard(); renderOrders(); renderOrderKPIs();
 }
-function updateOrderStatus(id,status){
-  const o=DB.orders.find(x=>x.id===id);
-  if(o){
-    const oldStatus=o.status;
-    if(!['paid','shipped','delivered'].includes(oldStatus) && ['paid','shipped','delivered'].includes(status)){
-      DB.balances.cash=(DB.balances.cash||0)+(o.orderValue||0);
-    }
-    if(oldStatus!=='refunded' && status==='refunded'){
-      DB.balances.cash=(DB.balances.cash||0)-(o.orderValue||0);
-    }
-    o.status=status;
-    saveDB();renderDashboard();renderOrders();renderOrderKPIs();toast('Status updated','success');
-  }
+async function updateOrderStatus(id,status){
+  const {error}=await sb.from('orders').update({status}).eq('id',id).eq('user_id',currentUser.id);
+  if(error){toast('Failed to update status','error');return;}
+  const o=DB.orders.find(x=>x.id===id); if(o) o.status=status;
+  renderDashboard(); renderOrders(); renderOrderKPIs(); toast('Status updated','success');
 }
 async function deleteOrder(id){
-
-  try{
-
-    await supabaseClient
-      .from('orders')
-      .delete()
-      .eq('id', id);
-
-    DB.orders =
-      DB.orders.filter(
-        o => o.id !== id
-      );
-
-    renderDashboard();
-    renderOrders();
-    renderOrderKPIs();
-
-    toast(
-      'Order deleted',
-      'info'
-    );
-
-  }catch(err){
-
-    console.error(err);
-
-    toast(
-      'Failed to delete order',
-      'error'
-    );
-
-  }
-
+  const {error}=await sb.from('orders').delete().eq('id',id).eq('user_id',currentUser.id);
+  if(error){toast('Failed to delete','error');return;}
+  DB.orders=DB.orders.filter(o=>o.id!==id);
+  renderDashboard(); renderOrders(); renderOrderKPIs(); toast('Order deleted','info');
 }
 function renderOrders(){
   const filter=$('order-filter')?.value||'';
   let orders=[...(DB.orders||[])].sort((a,b)=>b.date.localeCompare(a.date));
   if(filter) orders=orders.filter(o=>o.status===filter);
-  $('orders-body').innerHTML=orders.length?orders.map(o=>`<tr>
-    <td><strong style="font-family:var(--font-data);font-size:12px;color:var(--gold-dark);">${o.orderId}</strong></td>
-    <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${o.date}</td>
-    <td style="font-weight:500;">${o.customer}</td>
-    <td style="color:var(--muted);">${o.productName||'—'}</td>
-    <td style="text-align:center;">${o.qty}</td>
-    <td class="money">${fmt(o.orderValue)}</td>
-    <td class="money ${o.netProfit>=0?'pos':'neg'}">${fmt(o.netProfit)}</td>
-    <td>
-      <select onchange="updateOrderStatus('${o.id}',this.value)" style="background:var(--cream);border:1px solid var(--border);border-radius:6px;color:var(--charcoal);padding:4px 8px;font-size:12px;font-family:Inter,sans-serif;">
-        ${['pending','paid','shipped','delivered','refunded'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
-      </select>
-    </td>
-    <td style="white-space:nowrap;">
-      <button class="btn btn-secondary btn-sm btn-icon" onclick="openOrderModal('${o.id}')">✎</button>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteOrder('${o.id}')">✕</button>
-    </td>
-  </tr>`).join(''):`<tr><td colspan="9" class="empty-state"><div class="es-icon">◌</div>No orders found</td></tr>`;
+  $('orders-body').innerHTML=orders.length?orders.map(o=>`<tr><td><strong style="font-family:var(--font-data);font-size:12px;color:var(--gold-dark);">${o.orderId}</strong></td><td style="color:var(--muted);font-size:12px;white-space:nowrap;">${o.date}</td><td style="font-weight:500;">${o.customer}</td><td style="color:var(--muted);">${o.productName||'—'}</td><td style="text-align:center;">${o.qty}</td><td class="money">${fmt(o.orderValue)}</td><td class="money ${Number(o.netProfit)>=0?'pos':'neg'}">${fmt(o.netProfit)}</td><td><select onchange="updateOrderStatus('${o.id}',this.value)" style="background:var(--cream);border:1px solid var(--border);border-radius:6px;color:var(--charcoal);padding:4px 8px;font-size:12px;font-family:Inter,sans-serif;">${['pending','paid','shipped','delivered','refunded'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}</select></td><td style="white-space:nowrap;"><button class="btn btn-secondary btn-sm btn-icon" onclick="openOrderModal('${o.id}')">✎</button> <button class="btn btn-danger btn-sm btn-icon" onclick="deleteOrder('${o.id}')">✕</button></td></tr>`).join(''):`<tr><td colspan="9" class="empty-state"><div class="es-icon">◌</div>No orders found</td></tr>`;
 }
 function renderOrderKPIs(){
   const orders=DB.orders||[], n=new Date();
   const dayStart=n.toISOString().split('T')[0], weekStart=new Date(n-7*864e5).toISOString().split('T')[0], monthStart=n.toISOString().slice(0,7);
   const active=orders.filter(o=>['paid','shipped','delivered'].includes(o.status));
-  const pf=arr=>arr.reduce((s,o)=>s+(o.netProfit||0),0);
+  const pf=arr=>arr.reduce((s,o)=>s+Number(o.netProfit||0),0);
   $('order-kpis').innerHTML=[
-    {label:'Today\'s Profit',  value:fmt(pf(active.filter(o=>o.date>=dayStart))),   cls:''},
-    {label:'Weekly Profit',    value:fmt(pf(active.filter(o=>o.date>=weekStart))),  cls:''},
-    {label:'Monthly Profit',   value:fmt(pf(active.filter(o=>o.date.startsWith(monthStart)))), cls:'green'},
-    {label:'Lifetime Profit',  value:fmt(pf(active)),                               cls:'green'},
-    {label:'Total Orders',     value:orders.length,                                 cls:''},
-    {label:'Active Orders',    value:active.length,                                 cls:'gold'},
+    {label:"Today's Profit",value:fmt(pf(active.filter(o=>o.date>=dayStart))),cls:''},
+    {label:'Weekly Profit',value:fmt(pf(active.filter(o=>o.date>=weekStart))),cls:''},
+    {label:'Monthly Profit',value:fmt(pf(active.filter(o=>o.date.startsWith(monthStart)))),cls:'green'},
+    {label:'Lifetime Profit',value:fmt(pf(active)),cls:'green'},
+    {label:'Total Orders',value:orders.length,cls:''},
+    {label:'Active Orders',value:active.length,cls:'gold'},
   ].map(k=>`<div class="kpi-card ${k.cls}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.value}</div></div>`).join('');
 }
 
@@ -1760,28 +870,18 @@ function destroyChart(k){ if(charts[k]){charts[k].destroy();delete charts[k];} }
 function mkChart(id,type,labels,datasets,opts={}){
   destroyChart(id);
   const ctx=$(id)?.getContext('2d'); if(!ctx) return;
-  charts[id]=new Chart(ctx,{type,data:{labels,datasets},options:{
-    responsive:true,maintainAspectRatio:false,
-    plugins:{
-      legend:{labels:{color:'#7a7570',font:{size:11,family:'Inter'}}},
-      tooltip:{backgroundColor:'#fff',borderColor:'#e8e3da',borderWidth:1,titleColor:'#2c2c2c',bodyColor:'#7a7570',padding:10,cornerRadius:8,boxShadow:'0 4px 16px rgba(0,0,0,0.1)'}
-    },
-    scales:type!=='pie'&&type!=='doughnut'?{
-      x:{ticks:{color:'#b0aba4',font:{size:10}},grid:{color:'#f5f3ee'}},
-      y:{ticks:{color:'#b0aba4',font:{size:10}},grid:{color:'#f5f3ee'}}
-    }:undefined,...opts
-  }});
+  charts[id]=new Chart(ctx,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a7570',font:{size:11,family:'Inter'}}},tooltip:{backgroundColor:'#fff',borderColor:'#e8e3da',borderWidth:1,titleColor:'#2c2c2c',bodyColor:'#7a7570',padding:10,cornerRadius:8}},scales:type!=='pie'&&type!=='doughnut'?{x:{ticks:{color:'#b0aba4',font:{size:10}},grid:{color:'#f5f3ee'}},y:{ticks:{color:'#b0aba4',font:{size:10}},grid:{color:'#f5f3ee'}}}:undefined,...opts}});
 }
 function renderAnalytics(){
   const months=getLast12Months();
   const labels=months.map(m=>{const[y,mo]=m.split('-');return new Date(y,mo-1).toLocaleString('default',{month:'short',year:'2-digit'});});
   const txns=DB.transactions||[], orders=DB.orders||[];
-  const revByM   =months.map(m=>txns.filter(t=>t.type==='revenue'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0));
-  const expByM   =months.map(m=>txns.filter(t=>['expense','inventory','withdrawal'].includes(t.type)&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0));
-  const ordRevByM=months.map(m=>orders.filter(o=>['paid','shipped','delivered'].includes(o.status)&&o.date.startsWith(m)).reduce((s,o)=>s+(o.orderValue||0),0));
+  const revByM=months.map(m=>txns.filter(t=>t.type==='revenue'&&t.date.startsWith(m)).reduce((s,t)=>s+Number(t.amount),0));
+  const expByM=months.map(m=>txns.filter(t=>['expense','inventory','withdrawal'].includes(t.type)&&t.date.startsWith(m)).reduce((s,t)=>s+Number(t.amount),0));
+  const ordRevByM=months.map(m=>orders.filter(o=>['paid','shipped','delivered'].includes(o.status)&&o.date.startsWith(m)).reduce((s,o)=>s+Number(o.orderValue||0),0));
   const totRevByM=revByM.map((r,i)=>r+ordRevByM[i]);
-  const profByM  =totRevByM.map((r,i)=>r-expByM[i]);
-  const G='rgba(201,168,76', R='rgba(192,57,43', S='rgba(46,125,82';
+  const profByM=totRevByM.map((r,i)=>r-expByM[i]);
+  const G='rgba(201,168,76',R='rgba(192,57,43',S='rgba(46,125,82';
   mkChart('chart-revenue','bar',labels,[{label:'Revenue',data:totRevByM,backgroundColor:`${G},.15)`,borderColor:'#c9a84c',borderWidth:2,borderRadius:5}]);
   mkChart('chart-expenses','bar',labels,[{label:'Expenses',data:expByM,backgroundColor:`${R},.15)`,borderColor:'#c0392b',borderWidth:2,borderRadius:5}]);
   mkChart('chart-profit','line',labels,[{label:'Profit',data:profByM,backgroundColor:`${S},.1)`,borderColor:'#2e7d52',borderWidth:2,fill:true,tension:.4,pointBackgroundColor:profByM.map(v=>v>=0?'#2e7d52':'#c0392b'),pointRadius:4}]);
@@ -1790,27 +890,24 @@ function renderAnalytics(){
   const oc={};orders.forEach(o=>{if(o.productName) oc[o.productName]=(oc[o.productName]||0)+(o.qty||1);});
   const top=Object.entries(oc).sort((a,b)=>b[1]-a[1]).slice(0,8);
   if(top.length){const cols=['#c9a84c','#2e7d52','#4f63d2','#c0392b','#e4c97e','#5a9e7a','#7c8ee0','#d9695e'];mkChart('chart-topselling','doughnut',top.map(e=>e[0]),[{data:top.map(e=>e[1]),backgroundColor:cols.slice(0,top.length),borderColor:'#fff',borderWidth:3}]);}
-  mkChart('chart-rev-exp','line',labels,[
-    {label:'Revenue',data:totRevByM,borderColor:'#c9a84c',backgroundColor:`${G},.08)`,fill:true,tension:.4,borderWidth:2},
-    {label:'Expenses',data:expByM,borderColor:'#c0392b',backgroundColor:`${R},.08)`,fill:true,tension:.4,borderWidth:2}
-  ]);
+  mkChart('chart-rev-exp','line',labels,[{label:'Revenue',data:totRevByM,borderColor:'#c9a84c',backgroundColor:`${G},.08)`,fill:true,tension:.4,borderWidth:2},{label:'Expenses',data:expByM,borderColor:'#c0392b',backgroundColor:`${R},.08)`,fill:true,tension:.4,borderWidth:2}]);
 }
 
 /* ============================================================ HEALTH */
 function renderHealth(){
   const txns=DB.transactions||[], orders=DB.orders||[], months=getLast12Months();
-  const rev=months.map(m=>txns.filter(t=>t.type==='revenue'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0)+orders.filter(o=>['paid','shipped','delivered'].includes(o.status)&&o.date.startsWith(m)).reduce((s,o)=>s+(o.orderValue||0),0));
+  const rev=months.map(m=>txns.filter(t=>t.type==='revenue'&&t.date.startsWith(m)).reduce((s,t)=>s+Number(t.amount),0)+orders.filter(o=>['paid','shipped','delivered'].includes(o.status)&&o.date.startsWith(m)).reduce((s,o)=>s+Number(o.orderValue||0),0));
   const recentRev=rev.slice(-3).reduce((s,v)=>s+v,0), priorRev=rev.slice(-6,-3).reduce((s,v)=>s+v,0);
   const growthScore=priorRev>0?Math.min(30,Math.round((recentRev/priorRev-1)*100)):(recentRev>0?15:0);
   const revGrowthScore=Math.max(0,Math.min(25,growthScore+15));
-  const totalRev=txns.filter(t=>t.type==='revenue').reduce((s,t)=>s+t.amount,0)+orders.filter(o=>['paid','shipped','delivered'].includes(o.status)).reduce((s,o)=>s+(o.orderValue||0),0);
-  const totalExp=txns.filter(t=>['expense','inventory','withdrawal'].includes(t.type)).reduce((s,t)=>s+t.amount,0);
+  const totalRev=txns.filter(t=>t.type==='revenue').reduce((s,t)=>s+Number(t.amount),0)+orders.filter(o=>['paid','shipped','delivered'].includes(o.status)).reduce((s,o)=>s+Number(o.orderValue||0),0);
+  const totalExp=txns.filter(t=>['expense','inventory','withdrawal'].includes(t.type)).reduce((s,t)=>s+Number(t.amount),0);
   const margin=totalRev>0?((totalRev-totalExp)/totalRev)*100:0;
   const marginScore=Math.max(0,Math.min(25,Math.round(margin)));
-  const cash=DB.balances?.cash||0;
+  const cash=Number(DB.balances?.cash||0);
   const cashScore=cash>1000?20:cash>500?15:cash>100?10:cash>0?5:0;
-  const budget=DB.settings?.budget||0;
-  const mExp=txns.filter(t=>['expense','inventory','withdrawal'].includes(t.type)&&t.date.startsWith(new Date().toISOString().slice(0,7))).reduce((s,t)=>s+t.amount,0);
+  const budget=Number(DB.settings?.budget||0);
+  const mExp=txns.filter(t=>['expense','inventory','withdrawal'].includes(t.type)&&t.date.startsWith(new Date().toISOString().slice(0,7))).reduce((s,t)=>s+Number(t.amount),0);
   const expenseScore=budget>0?(mExp<budget*.7?15:mExp<budget?10:5):10;
   const recentOrders=orders.filter(o=>o.date>=months[9]).length;
   const salesScore=Math.min(15,recentOrders*2);
@@ -1820,24 +917,18 @@ function renderHealth(){
   circle.style.stroke=total>=70?'#2e7d52':total>=45?'#c9a84c':'#c0392b';
   $('health-score-num').textContent=total;
   $('health-score-num').style.color=total>=70?'#2e7d52':total>=45?'#b07d2a':'#c0392b';
-  $('health-breakdown').innerHTML=[
-    {label:'Revenue Growth',score:revGrowthScore,max:25},
-    {label:'Profit Margin',score:marginScore,max:25},
-    {label:'Cash Position',score:cashScore,max:20},
-    {label:'Expense Control',score:expenseScore,max:15},
-    {label:'Sales Trend',score:salesScore,max:15},
-  ].map(item=>{const pct=(item.score/item.max)*100,cls=pct>66?'':pct>33?'warn':'danger';return`<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span style="color:var(--muted);">${item.label}</span><span style="font-family:var(--font-data);font-weight:600;">${item.score}/${item.max}</span></div><div class="progress-bar-wrap"><div class="progress-bar ${cls}" style="width:${pct}%"></div></div></div>`;}).join('');
+  $('health-breakdown').innerHTML=[{label:'Revenue Growth',score:revGrowthScore,max:25},{label:'Profit Margin',score:marginScore,max:25},{label:'Cash Position',score:cashScore,max:20},{label:'Expense Control',score:expenseScore,max:15},{label:'Sales Trend',score:salesScore,max:15}].map(item=>{const pct=(item.score/item.max)*100,cls=pct>66?'':pct>33?'warn':'danger';return`<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span style="color:var(--muted);">${item.label}</span><span style="font-family:var(--font-data);font-weight:600;">${item.score}/${item.max}</span></div><div class="progress-bar-wrap"><div class="progress-bar ${cls}" style="width:${pct}%"></div></div></div>`;}).join('');
   const recs=[];
   if(margin<15) recs.push({icon:'◈',text:`Profit margin is ${fmtPct(margin)}. Consider raising prices or reducing costs.`});
   if(margin>=30) recs.push({icon:'✦',text:`Excellent margin of ${fmtPct(margin)}! Consider reinvesting into growth.`});
   if(cash<200) recs.push({icon:'△',text:`Low available cash (${fmt(cash)}). Ensure runway before scaling.`});
-  if(recentRev>priorRev*1.2) recs.push({icon:'↑',text:`Revenue grew ${fmtPct((recentRev/priorRev-1)*100)} vs last period. Strong momentum!`});
+  if(recentRev>priorRev*1.2) recs.push({icon:'↑',text:`Revenue grew ${fmtPct((recentRev/priorRev-1)*100)} vs last period.`});
   if(recentRev<priorRev*.8&&priorRev>0) recs.push({icon:'↓',text:`Revenue declined. Review marketing and sales channels.`});
   if(budget>0&&mExp>budget) recs.push({icon:'◉',text:`Monthly expenses exceed budget (${fmt(mExp)} vs ${fmt(budget)}).`});
   const bestProd=(DB.products||[]).sort((a,b)=>calcProfit(b)-calcProfit(a))[0];
   if(bestProd) recs.push({icon:'◻',text:`Best margin product: ${bestProd.name} at ${fmtPct(calcMargin(bestProd))}.`});
-  if(orders.filter(o=>o.status==='pending').length>5) recs.push({icon:'◌',text:`${orders.filter(o=>o.status==='pending').length} pending orders. Update statuses to track revenue accurately.`});
-  if(recs.length===0) recs.push({icon:'✓',text:`Your finances look healthy! Keep monitoring monthly.`});
+  if(orders.filter(o=>o.status==='pending').length>5) recs.push({icon:'◌',text:`${orders.filter(o=>o.status==='pending').length} pending orders need status updates.`});
+  if(recs.length===0) recs.push({icon:'✓',text:'Your finances look healthy! Keep monitoring monthly.'});
   $('rec-list').innerHTML=recs.map(r=>`<li class="rec-item"><span class="rec-icon" style="color:var(--gold-dark);">${r.icon}</span><span>${r.text}</span></li>`).join('');
 }
 
@@ -1845,23 +936,16 @@ function renderHealth(){
 function handleFileUpload(event){
   const file=event.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=e=>{
-    aiUploadedImage=e.target.result;
-    $('ai-preview-wrap').innerHTML=`<img src="${aiUploadedImage}" alt="Screenshot" style="max-width:100%;max-height:280px;border-radius:10px;border:1px solid var(--border);"><div style="font-size:11px;color:var(--light-muted);margin-top:6px;">📎 ${file.name}</div>`;
-    $('ai-analyze-btn').style.display='flex';
-    toast('Image loaded — click Analyze','info');
-  };
+  reader.onload=e=>{ aiUploadedImage=e.target.result; $('ai-preview-wrap').innerHTML=`<img src="${aiUploadedImage}" style="max-width:100%;max-height:280px;border-radius:10px;border:1px solid var(--border);">`;$('ai-analyze-btn').style.display='flex';toast('Image loaded — click Analyze','info'); };
   reader.readAsDataURL(file);
 }
 document.addEventListener('DOMContentLoaded',()=>{
   const dz=$('drop-zone'); if(!dz) return;
   dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
   dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
-  dz.addEventListener('drop',e=>{
-    e.preventDefault();dz.classList.remove('drag-over');
-    const file=e.dataTransfer.files[0];
-    if(file&&file.type.startsWith('image/')){const reader=new FileReader();reader.onload=ev=>{aiUploadedImage=ev.target.result;$('ai-preview-wrap').innerHTML=`<img src="${aiUploadedImage}" style="max-width:100%;max-height:280px;border-radius:10px;border:1px solid var(--border);">`;$('ai-analyze-btn').style.display='flex';toast('Image loaded','info');};reader.readAsDataURL(file);}
-  });
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const file=e.dataTransfer.files[0];if(file&&file.type.startsWith('image/')){const reader=new FileReader();reader.onload=ev=>{aiUploadedImage=ev.target.result;$('ai-preview-wrap').innerHTML=`<img src="${aiUploadedImage}" style="max-width:100%;max-height:280px;border-radius:10px;border:1px solid var(--border);">`;$('ai-analyze-btn').style.display='flex';};reader.readAsDataURL(file);}});
+  ['login-email','login-password'].forEach(id=>{ $(id)?.addEventListener('keydown',e=>{ if(e.key==='Enter') handleLogin(); }); });
+  ['signup-email','signup-password','signup-confirm'].forEach(id=>{ $(id)?.addEventListener('keydown',e=>{ if(e.key==='Enter') handleSignup(); }); });
 });
 async function analyzeImage(){
   const apiKey=localStorage.getItem('riderevamp_api_key');
@@ -1871,17 +955,13 @@ async function analyzeImage(){
   const prompts={general:'You are a business finance analyst. Analyze this business dashboard screenshot. Extract: 1) Revenue figures, 2) Expense amounts, 3) Profit/loss, 4) Key metrics. Then suggest specific transactions to record and provide a business health summary.',shopify:'Analyze this Shopify dashboard. Extract sales data, order counts, revenue, refunds, top products. Suggest transaction entries.',stripe:'Analyze this Stripe dashboard. Extract payment amounts, fees, net revenue, refunds. Suggest transaction entries.',paypal:'Analyze this PayPal screenshot. Extract incoming/outgoing payments, fees, net balance. Suggest categorized transaction entries.',expenses:'Analyze this expense report. Categorize expenses, identify largest cost centers, suggest reductions.',sales:'Analyze this sales report. Extract revenue by product/channel, identify best performers, provide growth recommendations.'};
   $('ai-result-area').innerHTML=`<div style="padding:24px;text-align:center;color:var(--muted);"><div class="thinking-dots"><span></span><span></span><span></span></div><div style="margin-top:12px;font-size:13px;">Analyzing your screenshot...</div></div>`;
   try{
-    const base64=aiUploadedImage.split(',')[1], mimeType=aiUploadedImage.split(';')[0].split(':')[1];
+    const base64=aiUploadedImage.split(',')[1],mimeType=aiUploadedImage.split(';')[0].split(':')[1];
     const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1500,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mimeType,data:base64}},{type:'text',text:(prompts[type]||prompts.general)+'\n\nFormat with ### headers. Be specific with dollar amounts.'}]}]})});
     if(!response.ok){const e=await response.json();throw new Error(e.error?.message||'API error');}
     const data=await response.json();
-    const text=data.content[0]?.text||'No response.';
-    const html=text.replace(/### (.*)/g,'<h3>$1</h3>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    const html=(data.content[0]?.text||'No response.').replace(/### (.*)/g,'<h3>$1</h3>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
     $('ai-result-area').innerHTML=`<div class="ai-result">${html}</div>`;
-  }catch(err){
-    $('ai-result-area').innerHTML=`<div class="ai-result" style="color:var(--danger);">Error: ${err.message}</div>`;
-    toast('Analysis failed: '+err.message,'error');
-  }
+  }catch(err){$('ai-result-area').innerHTML=`<div class="ai-result" style="color:var(--danger);">Error: ${err.message}</div>`;toast('Analysis failed: '+err.message,'error');}
 }
 async function generateSummary(period){
   const apiKey=localStorage.getItem('riderevamp_api_key');
@@ -1891,255 +971,159 @@ async function generateSummary(period){
   const n=new Date(), todayStr=n.toISOString().split('T')[0], weekAgo=new Date(n-7*864e5).toISOString().split('T')[0], monthStr=n.toISOString().slice(0,7);
   let ff; if(period==='daily') ff=t=>t.date===todayStr; else if(period==='weekly') ff=t=>t.date>=weekAgo; else ff=t=>t.date.startsWith(monthStr);
   const ft=txns.filter(ff), fo=orders.filter(o=>ff({date:o.date}));
-  const rev=ft.filter(t=>t.type==='revenue').reduce((s,t)=>s+t.amount,0)+fo.filter(o=>['paid','shipped','delivered'].includes(o.status)).reduce((s,o)=>s+(o.orderValue||0),0);
-  const exp=ft.filter(t=>['expense','inventory','withdrawal'].includes(t.type)).reduce((s,t)=>s+t.amount,0);
+  const rev=ft.filter(t=>t.type==='revenue').reduce((s,t)=>s+Number(t.amount),0)+fo.filter(o=>['paid','shipped','delivered'].includes(o.status)).reduce((s,o)=>s+Number(o.orderValue||0),0);
+  const exp=ft.filter(t=>['expense','inventory','withdrawal'].includes(t.type)).reduce((s,t)=>s+Number(t.amount),0);
   const snap={period,revenue:rev.toFixed(2),expenses:exp.toFixed(2),profit:(rev-exp).toFixed(2),profitMargin:rev>0?((rev-exp)/rev*100).toFixed(1):'0',orderCount:fo.length,products:prods.map(p=>({name:p.name,profitPerSale:calcProfit(p).toFixed(2),margin:calcMargin(p).toFixed(1)})),cash:DB.balances?.cash||0};
   const prompt=`You are a business analyst for RideRevamp, an automotive merchandise business.\n${period} data:\n${JSON.stringify(snap,null,2)}\n\nProvide a concise ${period} summary with:\n1. Performance overview\n2. Key wins and concerns\n3. Product insights\n4. 3 actionable recommendations\n5. Health rating: Excellent/Good/Fair/Poor\n\nUse ### headers. Be specific and practical.`;
   try{
     const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
     if(!response.ok){const e=await response.json();throw new Error(e.error?.message||'API error');}
     const data=await response.json();
-    const html=data.content[0]?.text.replace(/### (.*)/g,'<h3>$1</h3>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')||'';
+    const html=(data.content[0]?.text||'').replace(/### (.*)/g,'<h3>$1</h3>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
     $('ai-result-area').innerHTML=`<div class="ai-result">${html}</div>`;
-  }catch(err){
-    $('ai-result-area').innerHTML=`<div class="ai-result" style="color:var(--danger);">Error: ${err.message}</div>`;
-    toast('Summary failed: '+err.message,'error');
-  }
+  }catch(err){$('ai-result-area').innerHTML=`<div class="ai-result" style="color:var(--danger);">Error: ${err.message}</div>`;toast('Summary failed: '+err.message,'error');}
 }
 
 /* ============================================================ EXPORT / IMPORT */
 function exportCSV(){ const h=['Date','Type','Amount','Category','Description','Notes'],r=(DB.transactions||[]).map(t=>[t.date,t.type,t.amount,t.category||'',t.description||'',t.notes||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')); downloadFile([h.join(','),...r].join('\n'),'riderevamp_transactions.csv','text/csv'); toast('CSV exported','success'); }
 function exportOrdersCSV(){ const h=['Order ID','Date','Customer','Product','Qty','Order Value','Net Profit','Shipping','Status'],r=(DB.orders||[]).map(o=>[o.orderId,o.date,o.customer,o.productName||'',o.qty,o.orderValue||0,o.netProfit||0,o.shippingCharged||0,o.status].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')); downloadFile([h.join(','),...r].join('\n'),'riderevamp_orders.csv','text/csv'); toast('Orders CSV exported','success'); }
-function exportJSON(){ downloadFile(JSON.stringify(DB,null,2),'riderevamp_data.json','application/json'); toast('JSON exported','success'); }
-function exportBackup(){ downloadFile(JSON.stringify({...DB,_meta:{exported:now(),version:'1.0',app:'RideRevamp Finance'}},null,2),`riderevamp_backup_${today()}.json`,'application/json'); toast('Backup created','success'); }
+function exportJSON(){ downloadFile(JSON.stringify({transactions:DB.transactions,products:DB.products,orders:DB.orders,settings:DB.settings,balances:DB.balances},null,2),'riderevamp_data.json','application/json'); toast('JSON exported','success'); }
+function exportBackup(){ downloadFile(JSON.stringify({...DB,_meta:{exported:now(),version:'2.0',app:'RideRevamp Finance'}},null,2),`riderevamp_backup_${today()}.json`,'application/json'); toast('Backup created','success'); }
 function importBackup(event){
   const file=event.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=e=>{
+  reader.onload=async e=>{
     try{
       const data=JSON.parse(e.target.result);
-      if(data.transactions) DB.transactions=[...(DB.transactions||[]),...data.transactions.filter(t=>!DB.transactions.some(x=>x.id===t.id))];
-      if(data.products)     DB.products    =[...(DB.products||[]),...data.products.filter(p=>!DB.products.some(x=>x.id===p.id))];
-      if(data.orders)       DB.orders      =[...(DB.orders||[]),...data.orders.filter(o=>!DB.orders.some(x=>x.id===o.id))];
-      if(data.settings)     Object.assign(DB.settings,data.settings);
-      if(data.balances)     Object.assign(DB.balances,data.balances);
-      saveDB(); toast('Backup imported!','success'); renderDashboard();
+      if(data.transactions){ const rows=data.transactions.filter(t=>!DB.transactions.some(x=>x.id===t.id)).map(t=>({...t,user_id:currentUser.id})); if(rows.length){ await sb.from('transactions').insert(rows); DB.transactions.push(...rows); } }
+      if(data.products){ const rows=data.products.filter(p=>!DB.products.some(x=>x.id===p.id)).map(p=>({...p,user_id:currentUser.id})); if(rows.length){ await sb.from('products').insert(rows); DB.products.push(...rows); } }
+      if(data.orders){ const rows=data.orders.filter(o=>!DB.orders.some(x=>x.id===o.id)).map(o=>({...o,user_id:currentUser.id})); if(rows.length){ await sb.from('orders').insert(rows); DB.orders.push(...rows); } }
+      toast('Backup imported!','success'); renderDashboard();
     }catch(err){ toast('Import failed: '+err.message,'error'); }
   };
   reader.readAsText(file);
 }
-function confirmClearData(){
-  localStorage.removeItem('riderevamp_db');
-  DB={transactions:[],products:[],orders:[],settings:{bizName:'RideRevamp',currency:'USD',budget:0},balances:{cash:0,inventory:0}};
-  toast('All data cleared','info'); renderDashboard();
+async function confirmClearData(){
+  const uid=currentUser.id;
+  await Promise.all([
+    sb.from('transactions').delete().eq('user_id',uid),
+    sb.from('products').delete().eq('user_id',uid),
+    sb.from('orders').delete().eq('user_id',uid),
+    sb.from('settings').delete().eq('user_id',uid),
+    sb.from('balances').delete().eq('user_id',uid),
+  ]);
+  DB={ transactions:[], products:[], orders:[], settings:{bizName:'RideRevamp',currency:'USD',budget:0}, balances:{cash:0,inventory:0} };
+  toast('All your data has been cleared','info'); renderDashboard();
 }
 function downloadFile(content,filename,mimeType){ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mimeType}));a.download=filename;a.click();URL.revokeObjectURL(a.href); }
 
 /* ============================================================ SETTINGS */
-
-function saveApiKey(){
-  const k=$('settings-api-key').value.trim();
-
-  if(!k){
-    toast('Enter a valid key','error');
-    return;
-  }
-
-  localStorage.setItem(
-    'riderevamp_api_key',
-    k
-  );
-
-  $('settings-api-key').value='';
-
-  loadSettingsForm();
-
-  toast(
-    'API key saved',
-    'success'
-  );
-}
-
-function clearApiKey(){
-
-  localStorage.removeItem(
-    'riderevamp_api_key'
-  );
-
-  loadSettingsForm();
-
-  toast(
-    'Key removed',
-    'info'
-  );
-
-}
-
+function saveApiKey(){ const k=$('settings-api-key').value.trim(); if(!k){toast('Enter a valid key','error');return;} localStorage.setItem('riderevamp_api_key',k);$('settings-api-key').value='';loadSettingsForm();toast('API key saved','success'); }
+function clearApiKey(){ localStorage.removeItem('riderevamp_api_key');loadSettingsForm();toast('Key removed','info'); }
 async function saveSettings(){
-
-  DB.settings.bizName =
-    $('s-biz-name').value.trim()
-    || 'RideRevamp';
-
-  DB.settings.currency =
-    $('s-currency').value;
-
-  DB.settings.budget =
-    parseFloat(
-      $('s-budget').value
-    ) || 0;
-
-  await saveSettingsDB();
-
-  toast(
-    'Settings saved',
-    'success'
-  );
-
+  DB.settings.bizName=$('s-biz-name').value.trim()||'RideRevamp';
+  DB.settings.currency=$('s-currency').value;
+  DB.settings.budget=parseFloat($('s-budget').value)||0;
+  const payload={user_id:currentUser.id,bizName:DB.settings.bizName,currency:DB.settings.currency,budget:DB.settings.budget};
+  if(DB.settings.id) payload.id=DB.settings.id;
+  const {data,error}=await sb.from('settings').upsert([payload]).select().single();
+  if(error){toast('Failed to save settings','error');return;}
+  if(data) DB.settings.id=data.id;
+  updateBizNameDisplay();
+  toast('Settings saved','success');
 }
-
 async function saveBalances(){
-
-  DB.balances.cash =
-    parseFloat(
-      $('s-cash').value
-    ) || 0;
-
-  DB.balances.inventory =
-    parseFloat(
-      $('s-inventory').value
-    ) || 0;
-
-  await saveBalancesDB();
-
-  toast(
-    'Balances updated',
-    'success'
-  );
-
+  DB.balances.cash=parseFloat($('s-cash').value)||0;
+  DB.balances.inventory=parseFloat($('s-inventory').value)||0;
+  const payload={user_id:currentUser.id,cash:DB.balances.cash,inventory:DB.balances.inventory};
+  if(DB.balances.id) payload.id=DB.balances.id;
+  const {data,error}=await sb.from('balances').upsert([payload]).select().single();
+  if(error){toast('Failed to save balances','error');return;}
+  if(data) DB.balances.id=data.id;
+  toast('Balances updated','success');
 }
-
 function loadSettingsForm(){
-
-  if($('s-biz-name'))
-    $('s-biz-name').value =
-      DB.settings?.bizName
-      || 'RideRevamp';
-
-  if($('s-currency'))
-    $('s-currency').value =
-      DB.settings?.currency
-      || 'USD';
-
-  if($('s-budget'))
-    $('s-budget').value =
-      DB.settings?.budget
-      || '';
-
-  if($('s-cash'))
-    $('s-cash').value =
-      DB.balances?.cash
-      || '';
-
-  if($('s-inventory'))
-    $('s-inventory').value =
-      DB.balances?.inventory
-      || '';
-
-  const brand =
-    $('biz-name-display');
-
-  if(brand){
-    brand.textContent =
-      DB.settings?.bizName
-      || 'RideRevamp';
-  }
-
-  const hasKey =
-    !!localStorage.getItem(
-      'riderevamp_api_key'
-    );
-
-  const el =
-    $('api-key-status');
-
-  if(el){
-
-    el.innerHTML =
-      hasKey
-      ? `<span style="color:var(--success);font-size:13px;">✓ API key saved</span>`
-      : `<span style="color:var(--light-muted);font-size:13px;">No API key saved yet.</span>`;
-
-  }
-
+  if($('s-biz-name')) $('s-biz-name').value=DB.settings?.bizName||'RideRevamp';
+  if($('s-currency')) $('s-currency').value=DB.settings?.currency||'USD';
+  if($('s-budget')) $('s-budget').value=DB.settings?.budget||'';
+  if($('s-cash')) $('s-cash').value=DB.balances?.cash||'';
+  if($('s-inventory')) $('s-inventory').value=DB.balances?.inventory||'';
+  const hasKey=!!localStorage.getItem('riderevamp_api_key');
+  const el=$('api-key-status');
+  if(el) el.innerHTML=hasKey?`<span style="color:var(--success);font-size:13px;">✓ API key saved</span>`:`<span style="color:var(--light-muted);font-size:13px;">No API key saved yet.</span>`;
 }
 
 /* ============================================================ INIT */
-
-document.addEventListener(
-  'DOMContentLoaded',
-  async ()=>{
-
-    await loadDB();
-
-    const brand =
-  $('biz-name-display');
-
-if(brand){
-  brand.textContent =
-    DB.settings?.bizName ||
-    'RideRevamp';
-}
-    $('topbar-date').textContent =
-      new Date().toLocaleDateString(
-        'en-US',
-        {
-          weekday:'short',
-          month:'long',
-          day:'numeric',
-          year:'numeric'
-        }
-      );
-
-    if($('txn-date'))
-      $('txn-date').value = today();
-
-    if($('of-date'))
-      $('of-date').value = today();
-
-    [
-      'pf-price',
-      'pf-cost',
-      'pf-shipping',
-      'pf-packaging',
-      'pf-fee'
-    ].forEach(id=>{
-
-      const el=$(id);
-
-      if(el){
-        el.addEventListener(
-          'input',
-          updateProductPreview
-        );
-      }
-
-    });
-
-    const s = $('txn-search');
-
-    if(s){
-      s.addEventListener(
-        'input',
-        renderTransactions
-      );
-    }
-
-    renderDashboard();
-
-  }   // <-- THIS WAS MISSING
-
-);     // <-- closes addEventListener
+document.addEventListener('DOMContentLoaded', async ()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){ await bootApp(); }
+  else{ $('auth-screen').classList.add('visible'); }
+});
 </script>
 </body>
 </html>
+
+<!--
+=================================================================
+SQL — Run this in your Supabase SQL Editor
+=================================================================
+
+-- ENABLE RLS ON ALL TABLES
+ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE products     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE settings     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE balances     ENABLE ROW LEVEL SECURITY;
+
+-- TRANSACTIONS POLICIES
+CREATE POLICY "Users select own transactions"
+  ON transactions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users insert own transactions"
+  ON transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users update own transactions"
+  ON transactions FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users delete own transactions"
+  ON transactions FOR DELETE USING (auth.uid() = user_id);
+
+-- PRODUCTS POLICIES
+CREATE POLICY "Users select own products"
+  ON products FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users insert own products"
+  ON products FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users update own products"
+  ON products FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users delete own products"
+  ON products FOR DELETE USING (auth.uid() = user_id);
+
+-- ORDERS POLICIES
+CREATE POLICY "Users select own orders"
+  ON orders FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users insert own orders"
+  ON orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users update own orders"
+  ON orders FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users delete own orders"
+  ON orders FOR DELETE USING (auth.uid() = user_id);
+
+-- SETTINGS POLICIES
+CREATE POLICY "Users select own settings"
+  ON settings FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users insert own settings"
+  ON settings FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users update own settings"
+  ON settings FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users delete own settings"
+  ON settings FOR DELETE USING (auth.uid() = user_id);
+
+-- BALANCES POLICIES
+CREATE POLICY "Users select own balances"
+  ON balances FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users insert own balances"
+  ON balances FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users update own balances"
+  ON balances FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users delete own balances"
+  ON balances FOR DELETE USING (auth.uid() = user_id);
+
+=================================================================
+-->
