@@ -254,8 +254,7 @@ tbody tr:last-child{border-bottom:none;}
 <div id="auth-screen" class="visible">
   <div class="auth-box">
     <div class="auth-logo">
-      <div class="auth-wordmark">Ride<span>Revamp</span></div>
-      <div class="auth-sub">Finance Tracker</div>
+      <div class="auth-wordmark" style="font-size:22px;letter-spacing:.5px;">Finance Tracker</div>
     </div>
     <div class="auth-tabs">
       <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</div>
@@ -433,6 +432,7 @@ tbody tr:last-child{border-bottom:none;}
       <div class="kpi-grid" id="order-kpis"></div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:18px;gap:10px;flex-wrap:wrap;">
         <select id="order-filter" style="padding:9px 13px;border-radius:8px;background:var(--white);border:1px solid var(--border);color:var(--ink);" onchange="renderOrders()"><option value="">All Statuses</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="refunded">Refunded</option></select>
+        <button class="btn btn-secondary" id="sync-shopify-btn" onclick="syncShopifyOrders()">⟳ Sync Shopify Orders</button>
         <button class="btn btn-primary" onclick="openOrderModal()">+ New Order</button>
       </div>
       <div class="card" style="padding:0;overflow:hidden;"><div class="tbl-wrap"><table><thead><tr><th>Order ID</th><th>Date</th><th>Customer</th><th>Product</th><th>Qty</th><th>Order Value</th><th>Net Profit</th><th>Status</th><th></th></tr></thead><tbody id="orders-body"></tbody></table></div></div>
@@ -544,6 +544,18 @@ tbody tr:last-child{border-bottom:none;}
         </div>
         <button class="btn btn-primary" onclick="saveBalances()" style="margin-top:16px;">Update Balances</button>
       </div>
+      <div class="card">
+        <div class="section-heading">Shopify Integration</div>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Connect your Shopify store to sync orders automatically. Your credentials are stored securely in your account.</p>
+        <div class="form-grid">
+          <div class="form-group"><label>Shopify Store Domain</label><input type="text" id="s-shopify-domain" placeholder="store.myshopify.com"></div>
+          <div class="form-group"><label>Shopify Admin API Token</label><input type="password" id="s-shopify-token" placeholder="shpat_..."></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="saveShopifySettings()">Connect Shopify</button>
+          <span id="shopify-status" style="font-size:13px;color:var(--light-muted);"></span>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -608,8 +620,16 @@ async function handleSignup(){
   const {error}=await sb.auth.signUp({email,password});
   btn.disabled=false; btn.textContent='Create Account';
   if(error){ showAuthError(error.message); return; }
-  toast('Account created! Signing you in...','success');
-  setTimeout(async()=>{ await bootApp(); }, 800);
+  $('signup-email').value='';
+  $('signup-password').value='';
+  $('signup-confirm').value='';
+  switchTab('login');
+  const successMsg=document.createElement('div');
+  successMsg.style.cssText='background:var(--success-bg);border:1px solid rgba(46,125,82,.2);border-radius:8px;padding:10px 14px;color:var(--success);font-size:13px;margin-bottom:14px;';
+  successMsg.textContent='Account created successfully. Check your email to continue.';
+  const authError=$('auth-error');
+  authError.parentNode.insertBefore(successMsg,authError);
+  setTimeout(()=>successMsg.remove(),8000);
 }
 
 async function handleLogout(){
@@ -1077,6 +1097,135 @@ function loadSettingsForm(){
   const hasKey=!!localStorage.getItem('riderevamp_api_key');
   const el=$('api-key-status');
   if(el) el.innerHTML=hasKey?`<span style="color:var(--success);font-size:13px;">✓ API key saved</span>`:`<span style="color:var(--light-muted);font-size:13px;">No API key saved yet.</span>`;
+  loadShopifySettingsForm();
+}
+
+/* ============================================================ SHOPIFY */
+async function loadShopifySettingsForm(){
+  if(!currentUser) return;
+  const {data}=await sb.from('shopify_connections').select('store_domain,access_token').eq('user_id',currentUser.id).maybeSingle();
+  if(data){
+    if($('s-shopify-domain')) $('s-shopify-domain').value=data.store_domain||'';
+    if($('s-shopify-token')) $('s-shopify-token').value=data.access_token?'••••••••••••':'';
+    if($('shopify-status')) $('shopify-status').innerHTML=`<span style="color:var(--success);">✓ Connected: ${data.store_domain}</span>`;
+  }
+}
+
+async function saveShopifySettings(){
+  const domain=($('s-shopify-domain').value||'').trim().replace(/^https?:\/\//,'').replace(/\/$/,'');
+  const token=($('s-shopify-token').value||'').trim();
+  if(!domain){ toast('Enter your Shopify store domain','error'); return; }
+  if(!token||token==='••••••••••••'){ toast('Enter your Shopify Admin API Token','error'); return; }
+  if(!domain.endsWith('.myshopify.com')&&!domain.includes('.')){ toast('Domain should be like: store.myshopify.com','error'); return; }
+  const btn=event.target; btn.disabled=true; btn.textContent='Connecting...';
+  const payload={user_id:currentUser.id,store_domain:domain,access_token:token};
+  const {data:existing}=await sb.from('shopify_connections').select('id').eq('user_id',currentUser.id).maybeSingle();
+  let error;
+  if(existing){ ({error}=await sb.from('shopify_connections').update({store_domain:domain,access_token:token}).eq('user_id',currentUser.id)); }
+  else { ({error}=await sb.from('shopify_connections').insert([payload])); }
+  btn.disabled=false; btn.textContent='Connect Shopify';
+  if(error){ toast('Failed to save Shopify settings: '+error.message,'error'); return; }
+  if($('shopify-status')) $('shopify-status').innerHTML=`<span style="color:var(--success);">✓ Connected: ${domain}</span>`;
+  toast('Shopify connected!','success');
+}
+
+async function syncShopifyOrders(){
+  const btn=$('sync-shopify-btn');
+  if(!currentUser){ toast('Not logged in','error'); return; }
+
+  // Load credentials
+  const {data:conn}=await sb.from('shopify_connections').select('store_domain,access_token').eq('user_id',currentUser.id).maybeSingle();
+  if(!conn||!conn.store_domain||!conn.access_token){
+    toast('Connect your Shopify store in Settings first','error');
+    return;
+  }
+
+  btn.disabled=true; btn.textContent='Syncing...';
+
+  try{
+    // Call Supabase Edge Function to proxy the Shopify API (avoids CORS)
+    const {data:session}=await sb.auth.getSession();
+    const accessToken=session?.session?.access_token;
+
+    const resp=await fetch(`${SUPABASE_URL}/functions/v1/sync-shopify-orders`,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':`Bearer ${accessToken}`
+      },
+      body:JSON.stringify({store_domain:conn.store_domain,access_token:conn.access_token})
+    });
+
+    if(!resp.ok){
+      const errText=await resp.text();
+      throw new Error(errText||`HTTP ${resp.status}`);
+    }
+
+    const result=await resp.json();
+    const orders=result.orders||[];
+
+    if(orders.length===0){
+      btn.textContent='No New Orders';
+      setTimeout(()=>{ btn.disabled=false; btn.textContent='⟳ Sync Shopify Orders'; },3000);
+      toast('No new orders to import','info');
+      return;
+    }
+
+    // Check existing shopify_order_ids
+    const existingIds=new Set(DB.orders.filter(o=>o.shopify_order_id).map(o=>o.shopify_order_id));
+    const newOrders=orders.filter(o=>!existingIds.has(String(o.id)));
+
+    if(newOrders.length===0){
+      btn.textContent='No New Orders';
+      setTimeout(()=>{ btn.disabled=false; btn.textContent='⟳ Sync Shopify Orders'; },3000);
+      toast('All orders already imported','info');
+      return;
+    }
+
+    // Map Shopify orders to app order structure
+    const mappedOrders=newOrders.map(o=>{
+      const customerName=(o.billing_address?.name||o.customer?.first_name+' '+(o.customer?.last_name||'')||'Unknown').trim();
+      return {
+        id: 'shp-'+o.id,
+        user_id: currentUser.id,
+        shopify_order_id: String(o.id),
+        orderNumber: '#'+(o.order_number||o.name||o.id),
+        customer: customerName,
+        productId: '',
+        productName: (o.line_items&&o.line_items[0])?o.line_items[0].title:'Shopify Order',
+        qty: o.line_items?o.line_items.reduce((s,i)=>s+(i.quantity||1),0):1,
+        shippingCharged: parseFloat(o.total_shipping_price_set?.shop_money?.amount||o.shipping_lines?.[0]?.price||0),
+        status: mapShopifyFinancialStatus(o.financial_status),
+        notes: 'Shopify Order '+( o.name||'#'+o.order_number),
+        date: (o.created_at||today()).split('T')[0],
+        total: parseFloat(o.total_price||0),
+        createdAt: o.created_at||now()
+      };
+    });
+
+    const {error:insErr}=await sb.from('orders').insert(mappedOrders);
+    if(insErr) throw new Error(insErr.message);
+
+    DB.orders.push(...mappedOrders);
+    renderOrderKPIs();
+    renderOrders();
+
+    btn.textContent=`Imported ${mappedOrders.length} Order${mappedOrders.length===1?'':'s'}`;
+    setTimeout(()=>{ btn.disabled=false; btn.textContent='⟳ Sync Shopify Orders'; },4000);
+    toast(`Imported ${mappedOrders.length} Shopify order${mappedOrders.length===1?'':'s'}!`,'success');
+
+  }catch(err){
+    console.error('Shopify sync error:',err);
+    btn.textContent='Sync Failed';
+    setTimeout(()=>{ btn.disabled=false; btn.textContent='⟳ Sync Shopify Orders'; },3000);
+    toast('Sync failed: '+err.message,'error');
+  }
+}
+
+function mapShopifyFinancialStatus(s){
+  if(!s) return 'pending';
+  const m={paid:'paid',pending:'pending',refunded:'refunded',partially_refunded:'refunded',voided:'refunded',authorized:'pending',partially_paid:'pending'};
+  return m[s]||'pending';
 }
 
 /* ============================================================ INIT */
