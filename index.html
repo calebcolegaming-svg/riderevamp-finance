@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RideRevamp Finance</title>
+<title>Finance Tracker</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="shortcut icon" href="favicon.ico">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -239,13 +241,47 @@ tbody tr:last-child{border-bottom:none;}
   #sidebar-overlay.open{display:block;}
   #hamburger{display:flex;}
   #main{margin-left:0;}
-  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:12px;}
   .form-grid{grid-template-columns:1fr;}
   .chart-grid{grid-template-columns:1fr;}
-  .page{padding:16px;}
-  .topbar{padding:13px 18px;}
+  .page{padding:16px 14px;}
+  .topbar{padding:13px 16px;}
+  .btn{padding:11px 18px;font-size:14px;}
+  .btn-sm{padding:9px 14px;font-size:13px;}
+  .kpi-value{font-size:22px;}
+  .kpi-card{padding:16px;}
+  .card{padding:18px;margin-bottom:16px;}
+  .modal{padding:22px 18px;margin:10px;max-height:92vh;}
+  .modal-title{font-size:16px;}
+  .auth-box{padding:28px 20px;}
+  .section-heading{font-size:15px;flex-wrap:wrap;gap:8px;}
+  .section-heading > div{width:100%;}
+  /* Better tables on mobile */
+  thead th{padding:10px 10px;font-size:9.5px;}
+  tbody td{padding:10px 10px;font-size:12.5px;}
+  /* Orders page controls */
+  #page-orders > div:nth-child(2){flex-direction:column;align-items:stretch;}
+  #page-orders > div:nth-child(2) select,
+  #page-orders > div:nth-child(2) button{width:100%;justify-content:center;padding:12px 16px;font-size:14px;}
+  /* Settings layout */
+  .two-col{grid-template-columns:1fr;}
+  /* Shopify section */
+  #page-settings .card:last-child .btn{width:100%;justify-content:center;}
+  /* Auth */
+  .auth-tab{padding:10px 8px;font-size:13px;}
+  .auth-input{padding:13px 14px;font-size:15px;}
+  .auth-btn{padding:14px;font-size:15px;}
+  /* Topbar date hidden on very small screens */
+  .topbar-date{display:none;}
+  /* Sync button full width on mobile */
+  #sync-shopify-btn{width:100%;justify-content:center;}
 }
-@media(max-width:420px){.kpi-grid{grid-template-columns:1fr;}}
+@media(max-width:420px){
+  .kpi-grid{grid-template-columns:1fr;}
+  .kpi-value{font-size:24px;}
+  .row{flex-direction:column;}
+  .row .card{min-width:unset;}
+}
 </style>
 </head>
 <body>
@@ -342,7 +378,7 @@ tbody tr:last-child{border-bottom:none;}
 <div id="app" style="display:none;">
   <aside id="sidebar">
     <div class="sidebar-logo">
-      <div class="wordmark" id="biz-name-display">Ride<span>Revamp</span></div>
+      <div class="wordmark" id="biz-name-display">Finance<span>Tracker</span></div>
       <div class="sub">Finance Tracker</div>
     </div>
     <nav>
@@ -529,7 +565,7 @@ tbody tr:last-child{border-bottom:none;}
         <div class="card">
           <div class="section-heading">Business Info</div>
           <div class="form-grid">
-            <div class="form-group"><label>Business Name</label><input type="text" id="s-biz-name" placeholder="RideRevamp"></div>
+            <div class="form-group"><label>Business Name</label><input type="text" id="s-biz-name" placeholder="e.g. My Store"></div>
             <div class="form-group"><label>Currency</label><select id="s-currency"><option value="USD">USD ($)</option><option value="GBP">GBP (£)</option><option value="EUR">EUR (€)</option><option value="CAD">CAD (C$)</option><option value="AUD">AUD (A$)</option></select></div>
             <div class="form-group full"><label>Monthly Expense Budget ($)</label><input type="number" id="s-budget" placeholder="500"></div>
           </div>
@@ -548,17 +584,75 @@ tbody tr:last-child{border-bottom:none;}
         <div class="section-heading">Shopify Integration</div>
         <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Connect your Shopify store to sync orders automatically. Your credentials are stored securely in your account.</p>
         <div class="form-grid">
-          <div class="form-group"><label>Shopify Store Domain</label><input type="text" id="s-shopify-domain" placeholder="store.myshopify.com"></div>
-          <div class="form-group"><label>Shopify Admin API Token</label><input type="password" id="s-shopify-token" placeholder="shpat_..."></div>
+          <div class="form-group">
+            <label>Shopify Store Domain</label>
+            <input type="text" id="s-shopify-domain" placeholder="store.myshopify.com">
+            <span style="font-size:11px;color:var(--light-muted);margin-top:3px;">Example: <code style="background:var(--cream2);padding:1px 5px;border-radius:4px;">mystore.myshopify.com</code></span>
+          </div>
+          <div class="form-group">
+            <label>Shopify Admin API Token</label>
+            <input type="password" id="s-shopify-token" placeholder="shpat_xxxxxxxxxxxxxxxxx">
+            <span style="font-size:11px;color:var(--light-muted);margin-top:3px;">Example: <code style="background:var(--cream2);padding:1px 5px;border-radius:4px;">shpat_xxxxxxxxxxxxxxxxx</code></span>
+          </div>
         </div>
+        <div id="shopify-domain-error" style="display:none;color:var(--danger);font-size:12px;margin-top:8px;padding:8px 12px;background:var(--danger-bg);border-radius:7px;border:1px solid rgba(192,57,43,.2);"></div>
+        <div id="shopify-token-error" style="display:none;color:var(--danger);font-size:12px;margin-top:8px;padding:8px 12px;background:var(--danger-bg);border-radius:7px;border:1px solid rgba(192,57,43,.2);"></div>
         <div style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="saveShopifySettings()">Connect Shopify</button>
+          <button class="btn btn-secondary" onclick="openShopifyHelp()">? How Do I Get My Token?</button>
           <span id="shopify-status" style="font-size:13px;color:var(--light-muted);"></span>
         </div>
       </div>
     </div>
 
   </main>
+</div>
+
+<!-- SHOPIFY HELP MODAL -->
+<div class="modal-overlay" id="shopify-help-modal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <span class="modal-title">How to Get Your Shopify Admin API Token</span>
+      <button class="modal-close" onclick="closeShopifyHelp()">×</button>
+    </div>
+    <div style="margin-bottom:20px;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:16/9;">
+      <iframe
+        id="shopify-help-video"
+        width="100%" height="100%"
+        src="https://www.youtube.com/embed/WB3V1GM_B2U"
+        title="How to Get Shopify Admin API Token"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        style="display:block;width:100%;height:100%;min-height:300px;">
+      </iframe>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:12px 16px;background:var(--cream);border-radius:10px;border:1px solid var(--border);">
+        <span style="background:var(--gold);color:#fff;font-weight:700;font-size:12px;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</span>
+        <div><strong style="font-size:13px;color:var(--charcoal);">Create a Shopify Custom App</strong><br><span style="font-size:12px;color:var(--muted);">In your Shopify Admin, go to Settings → Apps and sales channels → Develop apps → Create an app</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:12px 16px;background:var(--cream);border-radius:10px;border:1px solid var(--border);">
+        <span style="background:var(--gold);color:#fff;font-weight:700;font-size:12px;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</span>
+        <div><strong style="font-size:13px;color:var(--charcoal);">Enable Admin API Access</strong><br><span style="font-size:12px;color:var(--muted);">Click "Configure Admin API scopes" and enable: read_orders, read_products, read_customers</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:12px 16px;background:var(--cream);border-radius:10px;border:1px solid var(--border);">
+        <span style="background:var(--gold);color:#fff;font-weight:700;font-size:12px;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</span>
+        <div><strong style="font-size:13px;color:var(--charcoal);">Generate Admin API Token</strong><br><span style="font-size:12px;color:var(--muted);">Click "Install app" then "Reveal token once" — copy it immediately, it will not be shown again</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:12px 16px;background:var(--cream);border-radius:10px;border:1px solid var(--border);">
+        <span style="background:var(--gold);color:#fff;font-weight:700;font-size:12px;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">4</span>
+        <div><strong style="font-size:13px;color:var(--charcoal);">Paste Store Domain and Token into Finance Tracker</strong><br><span style="font-size:12px;color:var(--muted);">Store Domain: <code style="background:var(--cream2);padding:1px 5px;border-radius:4px;">mystore.myshopify.com</code> &nbsp; Token: <code style="background:var(--cream2);padding:1px 5px;border-radius:4px;">shpat_xxxxxxxxx</code></span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:12px 16px;background:var(--cream);border-radius:10px;border:1px solid var(--border);">
+        <span style="background:var(--gold);color:#fff;font-weight:700;font-size:12px;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">5</span>
+        <div><strong style="font-size:13px;color:var(--charcoal);">Click Connect Shopify</strong><br><span style="font-size:12px;color:var(--muted);">You should see ✓ Shopify Connected — then use the Sync button on the Orders page</span></div>
+      </div>
+    </div>
+    <div style="margin-top:20px;text-align:right;">
+      <button class="btn btn-primary" onclick="closeShopifyHelp()">Got It</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -569,7 +663,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* ============================================================ STATE */
 let currentUser = null;
-let DB = { transactions:[], products:[], orders:[], settings:{bizName:'RideRevamp',currency:'USD',budget:0}, balances:{cash:0,inventory:0} };
+let DB = { transactions:[], products:[], orders:[], settings:{bizName:'',currency:'USD',budget:0}, balances:{cash:0,inventory:0} };
 let editingProductId=null, editingOrderId=null, aiUploadedImage=null, charts={};
 
 /* ============================================================ HELPERS */
@@ -635,7 +729,7 @@ async function handleSignup(){
 async function handleLogout(){
   await sb.auth.signOut();
   currentUser=null;
-  DB={ transactions:[], products:[], orders:[], settings:{bizName:'RideRevamp',currency:'USD',budget:0}, balances:{cash:0,inventory:0} };
+  DB={ transactions:[], products:[], orders:[], settings:{bizName:'',currency:'USD',budget:0}, balances:{cash:0,inventory:0} };
   $('app').style.display='none';
   $('auth-screen').classList.add('visible');
   switchTab('login');
@@ -672,21 +766,19 @@ async function loadDB(){
     DB.transactions=txns.data||[];
     DB.products=prods.data||[];
     DB.orders=ords.data||[];
-    if(sett.data){ DB.settings={ bizName:sett.data.bizName||'RideRevamp', currency:sett.data.currency||'USD', budget:sett.data.budget||0, id:sett.data.id }; }
+    if(sett.data){ DB.settings={ bizName:sett.data.bizName||'', currency:sett.data.currency||'USD', budget:sett.data.budget||0, id:sett.data.id }; }
     if(bals.data){ DB.balances={ cash:bals.data.cash||0, inventory:bals.data.inventory||0, id:bals.data.id }; }
-
-    if(DB.products.length===0){
-      const starter={ id:uid, user_id:currentUser.id, name:'Custom Decal', sku:'DECAL-001', category:'Decals', price:9.99, cost:1.20, shipping:4, packaging:0.3, platformFee:3, createdAt:now() };
-      await sb.from('products').insert([starter]);
-      DB.products=[starter];
-    }
     updateBizNameDisplay();
   }catch(err){ console.error(err); toast('Failed to load data','error'); }
 }
 
 function updateBizNameDisplay(){
   const el=$('biz-name-display');
-  if(el){ const n=DB.settings?.bizName||'RideRevamp'; el.innerHTML=n; }
+  if(el){
+    const n=DB.settings?.bizName;
+    if(n){ el.innerHTML=n; }
+    else{ el.innerHTML='Finance<span style="color:var(--gold-light);">Tracker</span>'; }
+  }
 }
 
 /* ============================================================ NAV */
@@ -994,7 +1086,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   ['signup-email','signup-password','signup-confirm'].forEach(id=>{ $(id)?.addEventListener('keydown',e=>{ if(e.key==='Enter') handleSignup(); }); });
 });
 async function analyzeImage(){
-  const apiKey=localStorage.getItem('riderevamp_api_key');
+  const apiKey=localStorage.getItem('financetracker_api_key');
   if(!apiKey){toast('Add your API key in Settings','error');return;}
   if(!aiUploadedImage){toast('Upload a screenshot first','error');return;}
   const type=$('ai-analysis-type').value;
@@ -1010,7 +1102,7 @@ async function analyzeImage(){
   }catch(err){$('ai-result-area').innerHTML=`<div class="ai-result" style="color:var(--danger);">Error: ${err.message}</div>`;toast('Analysis failed: '+err.message,'error');}
 }
 async function generateSummary(period){
-  const apiKey=localStorage.getItem('riderevamp_api_key');
+  const apiKey=localStorage.getItem('financetracker_api_key');
   if(!apiKey){toast('Add your API key in Settings','error');return;}
   $('ai-result-area').innerHTML=`<div style="padding:24px;text-align:center;color:var(--muted);"><div class="thinking-dots"><span></span><span></span><span></span></div><div style="margin-top:12px;font-size:13px;">Generating ${period} summary...</div></div>`;
   const txns=DB.transactions||[], orders=DB.orders||[], prods=DB.products||[];
@@ -1019,8 +1111,9 @@ async function generateSummary(period){
   const ft=txns.filter(ff), fo=orders.filter(o=>ff({date:o.date}));
   const rev=ft.filter(t=>t.type==='revenue').reduce((s,t)=>s+Number(t.amount),0)+fo.filter(o=>['paid','shipped','delivered'].includes(o.status)).reduce((s,o)=>s+Number(o.orderValue||0),0);
   const exp=ft.filter(t=>['expense','inventory','withdrawal'].includes(t.type)).reduce((s,t)=>s+Number(t.amount),0);
+  const bizName=DB.settings?.bizName||'your business';
   const snap={period,revenue:rev.toFixed(2),expenses:exp.toFixed(2),profit:(rev-exp).toFixed(2),profitMargin:rev>0?((rev-exp)/rev*100).toFixed(1):'0',orderCount:fo.length,products:prods.map(p=>({name:p.name,profitPerSale:calcProfit(p).toFixed(2),margin:calcMargin(p).toFixed(1)})),cash:DB.balances?.cash||0};
-  const prompt=`You are a business analyst for RideRevamp, an automotive merchandise business.\n${period} data:\n${JSON.stringify(snap,null,2)}\n\nProvide a concise ${period} summary with:\n1. Performance overview\n2. Key wins and concerns\n3. Product insights\n4. 3 actionable recommendations\n5. Health rating: Excellent/Good/Fair/Poor\n\nUse ### headers. Be specific and practical.`;
+  const prompt=`You are a business analyst for ${bizName}.\n${period} data:\n${JSON.stringify(snap,null,2)}\n\nProvide a concise ${period} summary with:\n1. Performance overview\n2. Key wins and concerns\n3. Product insights\n4. 3 actionable recommendations\n5. Health rating: Excellent/Good/Fair/Poor\n\nUse ### headers. Be specific and practical.`;
   try{
     const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
     if(!response.ok){const e=await response.json();throw new Error(e.error?.message||'API error');}
@@ -1031,10 +1124,10 @@ async function generateSummary(period){
 }
 
 /* ============================================================ EXPORT / IMPORT */
-function exportCSV(){ const h=['Date','Type','Amount','Category','Description','Notes'],r=(DB.transactions||[]).map(t=>[t.date,t.type,t.amount,t.category||'',t.description||'',t.notes||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')); downloadFile([h.join(','),...r].join('\n'),'riderevamp_transactions.csv','text/csv'); toast('CSV exported','success'); }
-function exportOrdersCSV(){ const h=['Order ID','Date','Customer','Product','Qty','Order Value','Net Profit','Shipping','Status'],r=(DB.orders||[]).map(o=>[o.orderId,o.date,o.customer,o.productName||'',o.qty,o.orderValue||0,o.netProfit||0,o.shippingCharged||0,o.status].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')); downloadFile([h.join(','),...r].join('\n'),'riderevamp_orders.csv','text/csv'); toast('Orders CSV exported','success'); }
-function exportJSON(){ downloadFile(JSON.stringify({transactions:DB.transactions,products:DB.products,orders:DB.orders,settings:DB.settings,balances:DB.balances},null,2),'riderevamp_data.json','application/json'); toast('JSON exported','success'); }
-function exportBackup(){ downloadFile(JSON.stringify({...DB,_meta:{exported:now(),version:'2.0',app:'RideRevamp Finance'}},null,2),`riderevamp_backup_${today()}.json`,'application/json'); toast('Backup created','success'); }
+function exportCSV(){ const h=['Date','Type','Amount','Category','Description','Notes'],r=(DB.transactions||[]).map(t=>[t.date,t.type,t.amount,t.category||'',t.description||'',t.notes||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')); downloadFile([h.join(','),...r].join('\n'),'transactions.csv','text/csv'); toast('CSV exported','success'); }
+function exportOrdersCSV(){ const h=['Order ID','Date','Customer','Product','Qty','Order Value','Net Profit','Shipping','Status'],r=(DB.orders||[]).map(o=>[o.orderId,o.date,o.customer,o.productName||'',o.qty,o.orderValue||0,o.netProfit||0,o.shippingCharged||0,o.status].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')); downloadFile([h.join(','),...r].join('\n'),'orders.csv','text/csv'); toast('Orders CSV exported','success'); }
+function exportJSON(){ downloadFile(JSON.stringify({transactions:DB.transactions,products:DB.products,orders:DB.orders,settings:DB.settings,balances:DB.balances},null,2),'finance_data.json','application/json'); toast('JSON exported','success'); }
+function exportBackup(){ downloadFile(JSON.stringify({...DB,_meta:{exported:now(),version:'2.0',app:'Finance Tracker'}},null,2),`finance_backup_${today()}.json`,'application/json'); toast('Backup created','success'); }
 function importBackup(event){
   const file=event.target.files[0]; if(!file) return;
   const reader=new FileReader();
@@ -1058,16 +1151,16 @@ async function confirmClearData(){
     sb.from('settings').delete().eq('user_id',uid),
     sb.from('balances').delete().eq('user_id',uid),
   ]);
-  DB={ transactions:[], products:[], orders:[], settings:{bizName:'RideRevamp',currency:'USD',budget:0}, balances:{cash:0,inventory:0} };
+  DB={ transactions:[], products:[], orders:[], settings:{bizName:'',currency:'USD',budget:0}, balances:{cash:0,inventory:0} };
   toast('All your data has been cleared','info'); renderDashboard();
 }
 function downloadFile(content,filename,mimeType){ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mimeType}));a.download=filename;a.click();URL.revokeObjectURL(a.href); }
 
 /* ============================================================ SETTINGS */
-function saveApiKey(){ const k=$('settings-api-key').value.trim(); if(!k){toast('Enter a valid key','error');return;} localStorage.setItem('riderevamp_api_key',k);$('settings-api-key').value='';loadSettingsForm();toast('API key saved','success'); }
-function clearApiKey(){ localStorage.removeItem('riderevamp_api_key');loadSettingsForm();toast('Key removed','info'); }
+function saveApiKey(){ const k=$('settings-api-key').value.trim(); if(!k){toast('Enter a valid key','error');return;} localStorage.setItem('financetracker_api_key',k);$('settings-api-key').value='';loadSettingsForm();toast('API key saved','success'); }
+function clearApiKey(){ localStorage.removeItem('financetracker_api_key');loadSettingsForm();toast('Key removed','info'); }
 async function saveSettings(){
-  DB.settings.bizName=$('s-biz-name').value.trim()||'RideRevamp';
+  DB.settings.bizName=$('s-biz-name').value.trim()||'';
   DB.settings.currency=$('s-currency').value;
   DB.settings.budget=parseFloat($('s-budget').value)||0;
   const payload={user_id:currentUser.id,bizName:DB.settings.bizName,currency:DB.settings.currency,budget:DB.settings.budget};
@@ -1089,12 +1182,12 @@ async function saveBalances(){
   toast('Balances updated','success');
 }
 function loadSettingsForm(){
-  if($('s-biz-name')) $('s-biz-name').value=DB.settings?.bizName||'RideRevamp';
+  if($('s-biz-name')) $('s-biz-name').value=DB.settings?.bizName||'';
   if($('s-currency')) $('s-currency').value=DB.settings?.currency||'USD';
   if($('s-budget')) $('s-budget').value=DB.settings?.budget||'';
   if($('s-cash')) $('s-cash').value=DB.balances?.cash||'';
   if($('s-inventory')) $('s-inventory').value=DB.balances?.inventory||'';
-  const hasKey=!!localStorage.getItem('riderevamp_api_key');
+  const hasKey=!!localStorage.getItem('financetracker_api_key');
   const el=$('api-key-status');
   if(el) el.innerHTML=hasKey?`<span style="color:var(--success);font-size:13px;">✓ API key saved</span>`:`<span style="color:var(--light-muted);font-size:13px;">No API key saved yet.</span>`;
   loadShopifySettingsForm();
@@ -1107,16 +1200,33 @@ async function loadShopifySettingsForm(){
   if(data){
     if($('s-shopify-domain')) $('s-shopify-domain').value=data.store_domain||'';
     if($('s-shopify-token')) $('s-shopify-token').value=data.access_token?'••••••••••••':'';
-    if($('shopify-status')) $('shopify-status').innerHTML=`<span style="color:var(--success);">✓ Connected: ${data.store_domain}</span>`;
+    if($('shopify-status')) $('shopify-status').innerHTML=`<span style="color:var(--success);font-weight:600;">✓ Shopify Connected: ${data.store_domain}</span>`;
   }
 }
 
 async function saveShopifySettings(){
-  const domain=($('s-shopify-domain').value||'').trim().replace(/^https?:\/\//,'').replace(/\/$/,'');
+  const domain=($('s-shopify-domain').value||'').trim().replace(/^https?:\/\//,'').replace(/\/$/,'').toLowerCase();
   const token=($('s-shopify-token').value||'').trim();
-  if(!domain){ toast('Enter your Shopify store domain','error'); return; }
-  if(!token||token==='••••••••••••'){ toast('Enter your Shopify Admin API Token','error'); return; }
-  if(!domain.endsWith('.myshopify.com')&&!domain.includes('.')){ toast('Domain should be like: store.myshopify.com','error'); return; }
+  // Clear previous errors
+  const domErr=$('shopify-domain-error'), tokErr=$('shopify-token-error');
+  if(domErr) domErr.style.display='none';
+  if(tokErr) tokErr.style.display='none';
+  let valid=true;
+  if(!domain){
+    if(domErr){ domErr.textContent='Store domain is required. Example: mystore.myshopify.com'; domErr.style.display='block'; }
+    valid=false;
+  } else if(!domain.includes('.')){
+    if(domErr){ domErr.textContent='Invalid domain format. Example: mystore.myshopify.com'; domErr.style.display='block'; }
+    valid=false;
+  }
+  if(!token||token==='••••••••••••'){
+    if(tokErr){ tokErr.textContent='Admin API Token is required. It starts with shpat_'; tokErr.style.display='block'; }
+    valid=false;
+  } else if(!token.startsWith('shpat_')&&token.length<20){
+    if(tokErr){ tokErr.textContent='Token looks invalid. Shopify tokens start with shpat_ and are 32+ characters.'; tokErr.style.display='block'; }
+    valid=false;
+  }
+  if(!valid) return;
   const btn=event.target; btn.disabled=true; btn.textContent='Connecting...';
   const payload={user_id:currentUser.id,store_domain:domain,access_token:token};
   const {data:existing}=await sb.from('shopify_connections').select('id').eq('user_id',currentUser.id).maybeSingle();
@@ -1125,8 +1235,15 @@ async function saveShopifySettings(){
   else { ({error}=await sb.from('shopify_connections').insert([payload])); }
   btn.disabled=false; btn.textContent='Connect Shopify';
   if(error){ toast('Failed to save Shopify settings: '+error.message,'error'); return; }
-  if($('shopify-status')) $('shopify-status').innerHTML=`<span style="color:var(--success);">✓ Connected: ${domain}</span>`;
-  toast('Shopify connected!','success');
+  if($('shopify-status')) $('shopify-status').innerHTML=`<span style="color:var(--success);font-weight:600;">✓ Shopify Connected: ${domain}</span>`;
+  toast('✓ Shopify Connected','success');
+}
+
+function openShopifyHelp(){
+  $('shopify-help-modal').classList.add('open');
+}
+function closeShopifyHelp(){
+  $('shopify-help-modal').classList.remove('open');
 }
 
 async function syncShopifyOrders(){
