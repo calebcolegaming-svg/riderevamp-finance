@@ -1205,15 +1205,7 @@ async function saveBalancesDB(){
 }
 
 async function saveDB(){
-
-  await Promise.all([
-    saveTransactions(),
-    saveProducts(),
-    saveOrders(),
-    saveSettingsDB(),
-    saveBalancesDB()
-  ]);
-
+  return true;
 }
 /* ============================================================ HELPERS */
 const $=id=>document.getElementById(id);
@@ -1689,7 +1681,41 @@ function updateOrderStatus(id,status){
     saveDB();renderDashboard();renderOrders();renderOrderKPIs();toast('Status updated','success');
   }
 }
-function deleteOrder(id){ DB.orders=DB.orders.filter(o=>o.id!==id); saveDB(); renderDashboard(); renderOrders(); renderOrderKPIs(); toast('Order deleted','info'); }
+async function deleteOrder(id){
+
+  try{
+
+    await supabaseClient
+      .from('orders')
+      .delete()
+      .eq('id', id);
+
+    DB.orders =
+      DB.orders.filter(
+        o => o.id !== id
+      );
+
+    renderDashboard();
+    renderOrders();
+    renderOrderKPIs();
+
+    toast(
+      'Order deleted',
+      'info'
+    );
+
+  }catch(err){
+
+    console.error(err);
+
+    toast(
+      'Failed to delete order',
+      'error'
+    );
+
+  }
+
+}
 function renderOrders(){
   const filter=$('order-filter')?.value||'';
   let orders=[...(DB.orders||[])].sort((a,b)=>b.date.localeCompare(a.date));
