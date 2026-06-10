@@ -1148,14 +1148,14 @@ async function saveTransactions(){
 }
 async function saveProducts(){
 
-  await supabase
+  await supabaseClient
     .from('products')
     .delete()
     .neq('id','0');
 
   if(DB.products.length){
 
-    await supabase
+    await supabaseClient
       .from('products')
       .insert(
         DB.products
@@ -1167,14 +1167,14 @@ async function saveProducts(){
 
 async function saveOrders(){
 
-  await supabase
+  await supabaseClient
     .from('orders')
     .delete()
     .neq('id','0');
 
   if(DB.orders.length){
 
-    await supabase
+    await supabaseClient
       .from('orders')
       .insert(
         DB.orders
@@ -1186,7 +1186,7 @@ async function saveOrders(){
 
 async function saveSettingsDB(){
 
-  await supabase
+  await supabaseClient
     .from('settings')
     .upsert([
       DB.settings
@@ -1196,7 +1196,7 @@ async function saveSettingsDB(){
 
 async function saveBalancesDB(){
 
-  await supabase
+  await supabaseClient
     .from('balances')
     .upsert([
       DB.balances
