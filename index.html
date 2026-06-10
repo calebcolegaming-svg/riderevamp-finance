@@ -900,22 +900,6 @@ window.supabase.createClient(
   SUPABASE_KEY
 );
 
-/* ============================================================ STATE */
-
-let DB = {
-  transactions: [],
-  products: [],
-  orders: [],
-  settings: {
-    bizName: 'RideRevamp',
-    currency: 'USD',
-    budget: 0
-  },
-  balances: {
-    cash: 0,
-    inventory: 0
-  }
-};
 
 /* ============================================================ AUTH */
 
@@ -954,6 +938,102 @@ async function checkAuth(){
   return true;
 }
 
+/* ============================================================ LOAD DB */
+
+async function loadDB(){
+
+  const authOk = await checkAuth();
+
+  if(!authOk) return;
+
+  try{
+
+    const [
+      txns,
+      products,
+      orders,
+      settings,
+      balances
+    ] = await Promise.all([
+
+      supabase
+        .from('transactions')
+        .select('*'),
+
+      supabase
+        .from('products')
+        .select('*'),
+
+      supabase
+        .from('orders')
+        .select('*'),
+
+      supabase
+        .from('settings')
+        .select('*')
+        .limit(1)
+        .single(),
+
+      supabase
+        .from('balances')
+        .select('*')
+        .limit(1)
+        .single()
+
+    ]);
+
+    DB.transactions =
+      txns.data || [];
+
+    DB.products =
+      products.data || [];
+
+    DB.orders =
+      orders.data || [];
+
+    DB.settings =
+      settings.data || DB.settings;
+
+    DB.balances =
+      balances.data || DB.balances;
+
+    if(DB.products.length === 0){
+
+      const starter = {
+        id: crypto.randomUUID(),
+        name: 'Custom Decal',
+        sku: 'DECAL-001',
+        category: 'Decals',
+        price: 9.99,
+        cost: 1.20,
+        shipping: 4,
+        packaging: 0.3,
+        platformFee: 3,
+        createdAt: new Date().toISOString()
+      };
+
+      DB.products.push(starter);
+
+      await supabase
+        .from('products')
+        .insert([starter]);
+
+    }
+
+    migrateLocalStorage();
+
+  }catch(err){
+
+    console.error(err);
+
+    toast(
+      'Database load failed',
+      'error'
+    );
+
+  }
+
+}
 
 /* ============================================================ MIGRATION */
 
