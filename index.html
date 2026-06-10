@@ -1527,7 +1527,10 @@ function openOrderModal(id){
   $('order-modal').classList.add('open');
 
 } // <-- ADD THIS
-
+function closeOrderModal(){
+  $('order-modal').classList.remove('open');
+  editingOrderId = null;
+}
 async function saveOrder(){
 
   const customer =
