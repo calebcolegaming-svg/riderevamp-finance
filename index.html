@@ -558,7 +558,7 @@ tbody tr:last-child{border-bottom:none;}
             <span style="font-size:20px;flex-shrink:0;">✓</span>
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--success);margin-bottom:4px;">AI is active — no setup required</div>
-              <div style="font-size:12px;color:var(--muted);line-height:1.6;">Your Anthropic API key is stored securely as a server-side secret. Screenshot analysis and AI summaries are ready to use from the AI Analysis page.</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6;">Your Gemini API key is stored securely as a server-side secret. Screenshot analysis and AI summaries are ready to use from the AI Analysis page.</div>
             </div>
           </div>
         </div>
@@ -1085,7 +1085,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   ['login-email','login-password'].forEach(id=>{ $(id)?.addEventListener('keydown',e=>{ if(e.key==='Enter') handleLogin(); }); });
   ['signup-email','signup-password','signup-confirm'].forEach(id=>{ $(id)?.addEventListener('keydown',e=>{ if(e.key==='Enter') handleSignup(); }); });
 });
-/* ============================================================ AI — via Edge Function */
+/* ============================================================ AI — via Gemini Edge Function */
 
 // Call the ai-analyzer Supabase Edge Function
 async function callAiAnalyzer(payload) {
