@@ -686,8 +686,34 @@ function showPage(name){
   if(name==='health') renderHealth();
   if(name==='settings') loadSettingsForm();
 }
-function toggleSidebar(){ $('sidebar').classList.toggle('open'); $('sidebar-overlay').classList.toggle('open'); }
-function closeSidebar(){ $('sidebar').classList.remove('open'); $('sidebar-overlay').classList.remove('open'); }
+function toggleSidebar(){
+
+  const sidebar = $('sidebar');
+  const overlay = $('sidebar-overlay');
+
+  if(sidebar){
+    sidebar.classList.toggle('open');
+  }
+
+  if(overlay){
+    overlay.classList.toggle('open');
+  }
+
+}
+function closeSidebar(){
+
+  const sidebar = $('sidebar');
+  const overlay = $('sidebar-overlay');
+
+  if(sidebar){
+    sidebar.classList.remove('open');
+  }
+
+  if(overlay){
+    overlay.classList.remove('open');
+  }
+
+}
 
 /* ============================================================ DASHBOARD */
 function renderDashboard(){
