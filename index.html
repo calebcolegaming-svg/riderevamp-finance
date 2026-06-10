@@ -899,7 +899,7 @@ const SUPABASE_KEY =
 console.log('window.supabase =', window.supabase);
 
 const supabaseClient =
-window.supabaseClient.createClient(
+supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
