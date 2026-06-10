@@ -892,14 +892,14 @@ let charts={};
 /* ============================================================ SUPABASE */
 
 const SUPABASE_URL =
-'https://yarepvybmgbbhvyaljdh.supabase.co';
+'https://yarepvybmgbbhvyaljdh.supabaseClient.co';
 const SUPABASE_KEY =
 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhcmVwdnlibWdiYmh2eWFsamRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNzk5MjMsImV4cCI6MjA5NjY1NTkyM30.76G6oUxx9ex-5i1_shZFRzGLPBYikoijM2-tOGuj_u0';
 
 console.log('window.supabase =', window.supabase);
 
 const supabaseClient =
-window.supabase.createClient(
+window.supabaseClient.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
@@ -960,25 +960,25 @@ async function loadDB(){
       balances
     ] = await Promise.all([
 
-      supabaseClient
+      supabase
         .from('transactions')
         .select('*'),
 
-      supabaseClient
+      supabase
         .from('products')
         .select('*'),
 
-      supabaseClient
+      supabase
         .from('orders')
         .select('*'),
 
-      supabaseClient
+      supabase
         .from('settings')
         .select('*')
         .limit(1)
         .single(),
 
-      supabaseClient
+      supabase
         .from('balances')
         .select('*')
         .limit(1)
