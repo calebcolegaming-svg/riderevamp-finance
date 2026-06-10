@@ -585,8 +585,8 @@
 <div id="app">
   <aside id="sidebar">
     <div class="sidebar-logo">
-      <div class="wordmark">Ride<span>Revamp</span></div>
-      <div class="sub">Finance Tracker</div>
+  <div class="wordmark" id="biz-name-display">RideRevamp</div>
+  <div class="sub">Finance Tracker</div>
     </div>
     <nav>
       <div class="nav-section-label">Overview</div>
@@ -2045,6 +2045,15 @@ function loadSettingsForm(){
     $('s-inventory').value =
       DB.balances?.inventory
       || '';
+
+  const brand =
+    $('biz-name-display');
+
+  if(brand){
+    brand.textContent =
+      DB.settings?.bizName
+      || 'RideRevamp';
+  }
 
   const hasKey =
     !!localStorage.getItem(
