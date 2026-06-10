@@ -1998,12 +1998,10 @@ document.addEventListener(
       );
 
     if($('txn-date'))
-      $('txn-date').value =
-        today();
+      $('txn-date').value = today();
 
     if($('of-date'))
-      $('of-date').value =
-        today();
+      $('of-date').value = today();
 
     [
       'pf-price',
@@ -2016,32 +2014,28 @@ document.addEventListener(
       const el=$(id);
 
       if(el){
-
         el.addEventListener(
           'input',
           updateProductPreview
         );
-
       }
 
     });
 
-    const s =
-      $('txn-search');
+    const s = $('txn-search');
 
     if(s){
-
       s.addEventListener(
         'input',
         renderTransactions
       );
-
     }
 
     renderDashboard();
 
-});
+  }   // <-- THIS WAS MISSING
 
+);     // <-- closes addEventListener
 </script>
 
 </body>
