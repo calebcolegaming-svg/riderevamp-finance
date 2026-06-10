@@ -2082,6 +2082,14 @@ document.addEventListener(
 
     await loadDB();
 
+    const brand =
+  $('biz-name-display');
+
+if(brand){
+  brand.textContent =
+    DB.settings?.bizName ||
+    'RideRevamp';
+}
     $('topbar-date').textContent =
       new Date().toLocaleDateString(
         'en-US',
