@@ -892,13 +892,13 @@ let charts={};
 /* ============================================================ SUPABASE */
 
 const SUPABASE_URL =
-'https://yarepvymgbbhvyaljdh.supabase.co';
+'https://yarepvymgbbhvyaljdh.supabaseC.co';
 
 const SUPABASE_KEY =
 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhcmVwdnlibWdiYmh2eWFsamRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNzk5MjMsImV4cCI6MjA5NjY1NTkyM30.76G6oUxx9ex-5i1_shZFRzGLPBYikoijM2-tOGuj_u0';
 
-const supabase =
-window.supabase.createClient(
+const supabaseClient =
+window.supabaseClient.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
@@ -910,7 +910,7 @@ async function checkAuth(){
 
   const {
     data: { session }
-  } = await supabase.auth.getSession();
+  } = await supabaseClient.auth.getSession();
 
   if(session){
     return true;
@@ -928,7 +928,7 @@ async function checkAuth(){
   }
 
   const { error } =
-    await supabase.auth.signInWithPassword({
+    await supabaseClient.auth.signInWithPassword({
       email,
       password
     });
