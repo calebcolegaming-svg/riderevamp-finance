@@ -886,16 +886,350 @@ let DB = { transactions:[], products:[], orders:[], settings:{bizName:'RideRevam
 let editingProductId=null, editingOrderId=null, aiUploadedImage=null;
 let charts={};
 
-/* ============================================================ DB */
-function loadDB(){
-  try{ const s=localStorage.getItem('riderevamp_db'); if(s) DB=Object.assign(DB,JSON.parse(s)); }catch(e){}
-  if(!DB.products||DB.products.length===0){
-    DB.products=[{id:'prod_'+Date.now(),name:'Custom Decal',sku:'DECAL-001',category:'Decals',price:9.99,cost:1.20,shipping:4.00,packaging:0.30,platformFee:3,createdAt:new Date().toISOString()}];
-    saveDB();
-  }
-}
-function saveDB(){ localStorage.setItem('riderevamp_db',JSON.stringify(DB)); }
+/* ============================================================ SUPABASE */
 
+const SUPABASE_URL =
+'https://yarepvymgbbhvyaljdh.supabase.co';
+
+const SUPABASE_KEY =
+'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhcmVwdnlibWdiYmh2eWFsamRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNzk5MjMsImV4cCI6MjA5NjY1NTkyM30.76G6oUxx9ex-5i1_shZFRzGLPBYikoijM2-tOGuj_u0';
+
+const supabase =
+window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+/* ============================================================ STATE */
+
+let DB = {
+  transactions: [],
+  products: [],
+  orders: [],
+  settings: {
+    bizName: 'RideRevamp',
+    currency: 'USD',
+    budget: 0
+  },
+  balances: {
+    cash: 0,
+    inventory: 0
+  }
+};
+
+/* ============================================================ AUTH */
+
+async function checkAuth(){
+
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  if(session){
+    return true;
+  }
+
+  const email =
+    prompt('Admin Email');
+
+  const password =
+    prompt('Password');
+
+  if(!email || !password){
+    alert('Login required');
+    return false;
+  }
+
+  const { error } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+  if(error){
+    alert(error.message);
+    return false;
+  }
+
+  return true;
+}
+
+/* ============================================================ LOAD DB */
+
+async function loadDB(){
+
+  const authOk = await checkAuth();
+
+  if(!authOk) return;
+
+  try{
+
+    const [
+      txns,
+      products,
+      orders,
+      settings,
+      balances
+    ] = await Promise.all([
+
+      supabase
+        .from('transactions')
+        .select('*'),
+
+      supabase
+        .from('products')
+        .select('*'),
+
+      supabase
+        .from('orders')
+        .select('*'),
+
+      supabase
+        .from('settings')
+        .select('*')
+        .limit(1)
+        .single(),
+
+      supabase
+        .from('balances')
+        .select('*')
+        .limit(1)
+        .single()
+
+    ]);
+
+    DB.transactions =
+      txns.data || [];
+
+    DB.products =
+      products.data || [];
+
+    DB.orders =
+      orders.data || [];
+
+    DB.settings =
+      settings.data || DB.settings;
+
+    DB.balances =
+      balances.data || DB.balances;
+
+    if(DB.products.length === 0){
+
+      const starter = {
+        id: crypto.randomUUID(),
+        name: 'Custom Decal',
+        sku: 'DECAL-001',
+        category: 'Decals',
+        price: 9.99,
+        cost: 1.20,
+        shipping: 4,
+        packaging: 0.3,
+        platformFee: 3,
+        createdAt: new Date().toISOString()
+      };
+
+      DB.products.push(starter);
+
+      await supabase
+        .from('products')
+        .insert([starter]);
+
+    }
+
+    migrateLocalStorage();
+
+  }catch(err){
+
+    console.error(err);
+
+    toast(
+      'Database load failed',
+      'error'
+    );
+
+  }
+
+}
+
+/* ============================================================ MIGRATION */
+
+async function migrateLocalStorage(){
+
+  try{
+
+    const raw =
+      localStorage.getItem(
+        'riderevamp_db'
+      );
+
+    if(!raw) return;
+
+    const local =
+      JSON.parse(raw);
+
+    if(
+      local.transactions?.length
+    ){
+
+      await supabase
+        .from('transactions')
+        .insert(
+          local.transactions
+        );
+
+    }
+
+    if(
+      local.products?.length
+    ){
+
+      await supabase
+        .from('products')
+        .insert(
+          local.products
+        );
+
+    }
+
+    if(
+      local.orders?.length
+    ){
+
+      await supabase
+        .from('orders')
+        .insert(
+          local.orders
+        );
+
+    }
+
+    if(local.settings){
+
+      await supabase
+        .from('settings')
+        .upsert([
+          local.settings
+        ]);
+
+    }
+
+    if(local.balances){
+
+      await supabase
+        .from('balances')
+        .upsert([
+          local.balances
+        ]);
+
+    }
+
+    localStorage.removeItem(
+      'riderevamp_db'
+    );
+
+    toast(
+      'Local data migrated',
+      'success'
+    );
+
+  }catch(err){
+
+    console.error(err);
+
+  }
+
+}
+
+/* ============================================================ SAVE HELPERS */
+
+async function saveTransactions(){
+
+  await supabase
+    .from('transactions')
+    .delete()
+    .neq('id','0');
+
+  if(DB.transactions.length){
+
+    await supabase
+      .from('transactions')
+      .insert(
+        DB.transactions
+      );
+
+  }
+
+}
+
+async function saveProducts(){
+
+  await supabase
+    .from('products')
+    .delete()
+    .neq('id','0');
+
+  if(DB.products.length){
+
+    await supabase
+      .from('products')
+      .insert(
+        DB.products
+      );
+
+  }
+
+}
+
+async function saveOrders(){
+
+  await supabase
+    .from('orders')
+    .delete()
+    .neq('id','0');
+
+  if(DB.orders.length){
+
+    await supabase
+      .from('orders')
+      .insert(
+        DB.orders
+      );
+
+  }
+
+}
+
+async function saveSettingsDB(){
+
+  await supabase
+    .from('settings')
+    .upsert([
+      DB.settings
+    ]);
+
+}
+
+async function saveBalancesDB(){
+
+  await supabase
+    .from('balances')
+    .upsert([
+      DB.balances
+    ]);
+
+}
+
+async function saveDB(){
+
+  await Promise.all([
+    saveTransactions(),
+    saveProducts(),
+    saveOrders(),
+    saveSettingsDB(),
+    saveBalancesDB()
+  ]);
+
+}
 /* ============================================================ HELPERS */
 const $=id=>document.getElementById(id);
 const fmt=n=>{ const sym={USD:'$',GBP:'£',EUR:'€',CAD:'C$',AUD:'A$'}[DB.settings?.currency||'USD']||'$'; return sym+parseFloat(n||0).toFixed(2); };
@@ -1091,7 +1425,10 @@ function saveOrder(){
   const orderValue=product?product.price*qty+shippingCharged:shippingCharged;
   const netProfit=product?calcProfit(product)*qty:0;
   const data={customer,productId,productName:product?product.name:'Unknown',qty,shippingCharged,orderValue,netProfit,status,date,notes};
-  if(editingOrderId){ const idx=DB.orders.findIndex(o=>o.id===editingOrderId); if(idx!==-1) DB.orders[idx]={...DB.orders[idx],...data}; toast('Order updated','success'); }
+  if(editingOrderId){ const idx=DB.orders.findIndex(o=>o.id===editingOrderId); if(idx!==-1) DB.orders[idx] = {
+  ...DB.orders[idx],
+  ...data
+}; toast('Order updated','success'); }
   else{ const orderId='RR-'+String(DB.orders.length+1).padStart(4,'0'); DB.orders.push({id:uid(),orderId,...data,createdAt:now()}); toast('Order added','success'); }
   if(!editingOrderId && ['paid','shipped','delivered'].includes(status)){
     DB.balances.cash=(DB.balances.cash||0)+orderValue;
@@ -1333,31 +1670,203 @@ function confirmClearData(){
 function downloadFile(content,filename,mimeType){ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mimeType}));a.download=filename;a.click();URL.revokeObjectURL(a.href); }
 
 /* ============================================================ SETTINGS */
-function saveApiKey(){ const k=$('settings-api-key').value.trim(); if(!k){toast('Enter a valid key','error');return;} localStorage.setItem('riderevamp_api_key',k);$('settings-api-key').value='';loadSettingsForm();toast('API key saved','success'); }
-function clearApiKey(){ localStorage.removeItem('riderevamp_api_key');loadSettingsForm();toast('Key removed','info'); }
-function saveSettings(){ DB.settings.bizName=$('s-biz-name').value.trim()||'RideRevamp';DB.settings.currency=$('s-currency').value;DB.settings.budget=parseFloat($('s-budget').value)||0;saveDB();toast('Settings saved','success'); }
-function saveBalances(){ DB.balances.cash=parseFloat($('s-cash').value)||0;DB.balances.inventory=parseFloat($('s-inventory').value)||0;saveDB();toast('Balances updated','success'); }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+function saveApiKey(){
+  const k=$('settings-api-key').value.trim();
+
+  if(!k){
+    toast('Enter a valid key','error');
+    return;
+  }
+
+  localStorage.setItem(
+    'riderevamp_api_key',
+    k
+  );
+
+  $('settings-api-key').value='';
+
+  loadSettingsForm();
+
+  toast(
+    'API key saved',
+    'success'
+  );
+}
+
+function clearApiKey(){
+
+  localStorage.removeItem(
+    'riderevamp_api_key'
+  );
+
+  loadSettingsForm();
+
+  toast(
+    'Key removed',
+    'info'
+  );
+
+}
+
+async function saveSettings(){
+
+  DB.settings.bizName =
+    $('s-biz-name').value.trim()
+    || 'RideRevamp';
+
+  DB.settings.currency =
+    $('s-currency').value;
+
+  DB.settings.budget =
+    parseFloat(
+      $('s-budget').value
+    ) || 0;
+
+  await saveSettingsDB();
+
+  toast(
+    'Settings saved',
+    'success'
+  );
+
+}
+
+async function saveBalances(){
+
+  DB.balances.cash =
+    parseFloat(
+      $('s-cash').value
+    ) || 0;
+
+  DB.balances.inventory =
+    parseFloat(
+      $('s-inventory').value
+    ) || 0;
+
+  await saveBalancesDB();
+
+  toast(
+    'Balances updated',
+    'success'
+  );
+
+}
+
 function loadSettingsForm(){
-  if($('s-biz-name')) $('s-biz-name').value=DB.settings?.bizName||'RideRevamp';
-  if($('s-currency')) $('s-currency').value=DB.settings?.currency||'USD';
-  if($('s-budget'))   $('s-budget').value=DB.settings?.budget||'';
-  if($('s-cash'))     $('s-cash').value=DB.balances?.cash||'';
-  if($('s-inventory'))$('s-inventory').value=DB.balances?.inventory||'';
-  const hasKey=!!localStorage.getItem('riderevamp_api_key');
-  const el=$('api-key-status');
-  if(el) el.innerHTML=hasKey?`<span style="color:var(--success);font-size:13px;">✓ API key saved</span>`:`<span style="color:var(--light-muted);font-size:13px;">No API key saved yet.</span>`;
+
+  if($('s-biz-name'))
+    $('s-biz-name').value =
+      DB.settings?.bizName
+      || 'RideRevamp';
+
+  if($('s-currency'))
+    $('s-currency').value =
+      DB.settings?.currency
+      || 'USD';
+
+  if($('s-budget'))
+    $('s-budget').value =
+      DB.settings?.budget
+      || '';
+
+  if($('s-cash'))
+    $('s-cash').value =
+      DB.balances?.cash
+      || '';
+
+  if($('s-inventory'))
+    $('s-inventory').value =
+      DB.balances?.inventory
+      || '';
+
+  const hasKey =
+    !!localStorage.getItem(
+      'riderevamp_api_key'
+    );
+
+  const el =
+    $('api-key-status');
+
+  if(el){
+
+    el.innerHTML =
+      hasKey
+      ? `<span style="color:var(--success);font-size:13px;">✓ API key saved</span>`
+      : `<span style="color:var(--light-muted);font-size:13px;">No API key saved yet.</span>`;
+
+  }
+
 }
 
 /* ============================================================ INIT */
-document.addEventListener('DOMContentLoaded',()=>{
-  loadDB(); 
-  $('topbar-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'});
-  if($('txn-date')) $('txn-date').value=today();
-  if($('of-date'))  $('of-date').value=today();
-  ['pf-price','pf-cost','pf-shipping','pf-packaging','pf-fee'].forEach(id=>{const el=$(id);if(el) el.addEventListener('input',updateProductPreview);});
-  const s=$('txn-search'); if(s) s.addEventListener('input',renderTransactions);
-  renderDashboard();
+
+document.addEventListener(
+  'DOMContentLoaded',
+  async ()=>{
+
+    await loadDB();
+
+    $('topbar-date').textContent =
+      new Date().toLocaleDateString(
+        'en-US',
+        {
+          weekday:'short',
+          month:'long',
+          day:'numeric',
+          year:'numeric'
+        }
+      );
+
+    if($('txn-date'))
+      $('txn-date').value =
+        today();
+
+    if($('of-date'))
+      $('of-date').value =
+        today();
+
+    [
+      'pf-price',
+      'pf-cost',
+      'pf-shipping',
+      'pf-packaging',
+      'pf-fee'
+    ].forEach(id=>{
+
+      const el=$(id);
+
+      if(el){
+
+        el.addEventListener(
+          'input',
+          updateProductPreview
+        );
+
+      }
+
+    });
+
+    const s =
+      $('txn-search');
+
+    if(s){
+
+      s.addEventListener(
+        'input',
+        renderTransactions
+      );
+
+    }
+
+    renderDashboard();
+
 });
+
 </script>
+
 </body>
 </html>
