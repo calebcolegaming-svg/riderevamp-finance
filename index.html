@@ -1328,7 +1328,7 @@ function deleteTransaction(id){
 }
 function renderTransactions(){
   const search=($('txn-search')?.value||'').toLowerCase(), filter=$('txn-filter-type')?.value||'';
-  let txns=[.....(DB.transactions||[])].sort((a,b)=>b.date.localeCompare(a.date));
+ let txns=[...(DB.transactions||[])].sort((a,b)=>b.date.localeCompare(a.date));
   if(filter) txns=txns.filter(t=>t.type===filter);
   if(search) txns=txns.filter(t=>[t.type,t.category,t.description,t.notes].join(' ').toLowerCase().includes(search));
   $('txn-body').innerHTML=txns.length?txns.map(t=>`<tr>
@@ -1397,7 +1397,7 @@ async function saveProduct(){
 
       if(idx !== -1){
         DB.products[idx] = {
-          .....DB.products[idx],
+          ...DB.products[idx],
           ...data
         };
       }
@@ -1548,7 +1548,7 @@ async function saveOrder(){
       if(idx !== -1){
 
         DB.orders[idx] = {
-          .....DB.orders[idx],
+          ...DB.orders[idx],
           ...data
         };
 
@@ -1631,7 +1631,7 @@ function updateOrderStatus(id,status){
 function deleteOrder(id){ DB.orders=DB.orders.filter(o=>o.id!==id); saveDB(); renderDashboard(); renderOrders(); renderOrderKPIs(); toast('Order deleted','info'); }
 function renderOrders(){
   const filter=$('order-filter')?.value||'';
-  let orders=[.....(DB.orders||[])].sort((a,b)=>b.date.localeCompare(a.date));
+  let orders=[...(DB.orders||[])].sort((a,b)=>b.date.localeCompare(a.date));
   if(filter) orders=orders.filter(o=>o.status===filter);
   $('orders-body').innerHTML=orders.length?orders.map(o=>`<tr>
     <td><strong style="font-family:var(--font-data);font-size:12px;color:var(--gold-dark);">${o.orderId}</strong></td>
@@ -1824,16 +1824,16 @@ async function generateSummary(period){
 function exportCSV(){ const h=['Date','Type','Amount','Category','Description','Notes'],r=(DB.transactions||[]).map(t=>[t.date,t.type,t.amount,t.category||'',t.description||'',t.notes||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')); downloadFile([h.join(','),...r].join('\n'),'riderevamp_transactions.csv','text/csv'); toast('CSV exported','success'); }
 function exportOrdersCSV(){ const h=['Order ID','Date','Customer','Product','Qty','Order Value','Net Profit','Shipping','Status'],r=(DB.orders||[]).map(o=>[o.orderId,o.date,o.customer,o.productName||'',o.qty,o.orderValue||0,o.netProfit||0,o.shippingCharged||0,o.status].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')); downloadFile([h.join(','),...r].join('\n'),'riderevamp_orders.csv','text/csv'); toast('Orders CSV exported','success'); }
 function exportJSON(){ downloadFile(JSON.stringify(DB,null,2),'riderevamp_data.json','application/json'); toast('JSON exported','success'); }
-function exportBackup(){ downloadFile(JSON.stringify({.....DB,_meta:{exported:now(),version:'1.0',app:'RideRevamp Finance'}},null,2),`riderevamp_backup_${today()}.json`,'application/json'); toast('Backup created','success'); }
+function exportBackup(){ downloadFile(JSON.stringify({...DB,_meta:{exported:now(),version:'1.0',app:'RideRevamp Finance'}},null,2),`riderevamp_backup_${today()}.json`,'application/json'); toast('Backup created','success'); }
 function importBackup(event){
   const file=event.target.files[0]; if(!file) return;
   const reader=new FileReader();
   reader.onload=e=>{
     try{
       const data=JSON.parse(e.target.result);
-      if(data.transactions) DB.transactions=[.....(DB.transactions||[]),...data.transactions.filter(t=>!DB.transactions.some(x=>x.id===t.id))];
-      if(data.products)     DB.products    =[.....(DB.products||[]),...data.products.filter(p=>!DB.products.some(x=>x.id===p.id))];
-      if(data.orders)       DB.orders      =[.....(DB.orders||[]),...data.orders.filter(o=>!DB.orders.some(x=>x.id===o.id))];
+      if(data.transactions) DB.transactions=[...(DB.transactions||[]),...data.transactions.filter(t=>!DB.transactions.some(x=>x.id===t.id))];
+      if(data.products)     DB.products    =[...(DB.products||[]),...data.products.filter(p=>!DB.products.some(x=>x.id===p.id))];
+      if(data.orders)       DB.orders      =[...(DB.orders||[]),...data.orders.filter(o=>!DB.orders.some(x=>x.id===o.id))];
       if(data.settings)     Object.assign(DB.settings,data.settings);
       if(data.balances)     Object.assign(DB.balances,data.balances);
       saveDB(); toast('Backup imported!','success'); renderDashboard();
